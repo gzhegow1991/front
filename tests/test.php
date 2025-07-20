@@ -1,20 +1,3 @@
-# Front
-
-## Установить
-
-```
-composer require gzhegow/front
-```
-
-## Запустить тесты
-
-```
-php test.php
-```
-
-## Примеры и тесты
-
-```php
 <?php
 
 // > настраиваем PHP
@@ -164,5 +147,3 @@ $test->expectStdout('
 </div>"
 ');
 $test->run();
-```
-

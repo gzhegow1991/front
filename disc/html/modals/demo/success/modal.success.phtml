@@ -1,0 +1,32 @@
+<?php
+/**
+ * @var \Gzhegow\Front\FrontTemplateContract $this
+ */
+
+/** @see /disc/html/modals/demo/layout.modal.phtml */
+$this->layout('html::modals/demo/layout.modal', [
+    'id' => 'success',
+]);
+
+?>
+
+
+<?php $this->start('modal-title'); ?>
+
+    <div>Всё отлично!</div>
+
+<?php $this->end(); ?>
+
+
+<?php $this->start('modal-content'); ?>
+
+    <div>
+        <div>
+            Форма была отправлена.
+        </div>
+        <div>
+            Скоро наши специалисты Вам перезвонят
+        </div>
+    </div>
+
+<?php $this->end(); ?>

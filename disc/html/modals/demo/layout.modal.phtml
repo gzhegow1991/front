@@ -1,0 +1,30 @@
+<?php
+/**
+ * @var \Gzhegow\Front\FrontTemplateContract $this
+ */
+
+$id = $id ?? null;
+$class = $class ?? null;
+
+?>
+
+<div id="modal-<?= $id; ?>" class="modal modal-<?= $id; ?> <?= $class; ?>"
+    style="display: none; width: 50rem;"
+>
+
+    <div style="max-width: 40rem;">
+
+        <div>
+
+            <?= $this->section('modal-title'); ?>
+
+        </div>
+        <div>
+
+            <?= $this->section('modal-content'); ?>
+
+        </div>
+
+    </div>
+
+</div>

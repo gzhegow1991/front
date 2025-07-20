@@ -1,0 +1,43 @@
+{
+    "name": "gzhegow/front",
+    "type": "library",
+    "version": "1.0.0",
+    "license": "MIT",
+
+    "authors": [
+        {
+            "name": "gzhegow",
+            "email": "6562680@gmail.com"
+        }
+    ],
+
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+
+    "autoload": {
+        "psr-4": {
+            "Gzhegow\\Front\\": "src/"
+        },
+        "exclude-from-classmap": [
+            "tests/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Gzhegow\\Front\\Tests\\": "tests/src/"
+        }
+    },
+
+    "require": {
+        "php": "^7.3|^8.0",
+
+        "gzhegow/lib": "~1.1.0",
+        "gzhegow/league-plates-84": "^3.0"
+    },
+
+    "config": {
+        "optimize-autoloader": true,
+
+        "sort-packages": false
+    }
+}

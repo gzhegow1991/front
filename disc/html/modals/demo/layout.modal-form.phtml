@@ -1,0 +1,71 @@
+<?php
+/**
+ * @var \Gzhegow\Front\FrontTemplateContract $this
+ */
+
+$theUrl = \Gzhegow\Lib\Lib::url();
+
+$id = $id ?? null;
+$class = $class ?? null;
+$errors = $errors ?? null;
+
+?>
+
+<div id="modal-<?= $id; ?>" class="modal modal-<?= $id; ?> <?= $class; ?>"
+    style="display: none; width: 50rem;"
+>
+
+    <div style="max-width: 40rem;">
+
+        <div>
+
+            <?= $this->section('modal-title'); ?>
+
+        </div>
+        <div>
+
+            <?= $this->section('modal-content'); ?>
+
+        </div>
+        <div>
+
+            <form name="<?= $id; ?>"
+                method="POST" action="<?= $theUrl->url('/api/v1/form'); ?>"
+            >
+                <input type="hidden" name="form" value="<?= $id; ?>" />
+
+                <div>
+
+                    <?php foreach ( $errors as $error ): ?>
+
+                        <div><?= $error; ?></div>
+
+                    <?php endforeach; ?>
+
+                </div>
+
+                <div>
+
+                    <?= $this->section('form-content'); ?>
+
+                </div>
+                <div>
+
+                    <div>
+                        <span>*</span> - поля, отмеченные звездочкой обязательны для заполнения
+                    </div>
+
+                </div>
+                <div>
+
+                    <?= $this->section('form-buttons'); ?>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>

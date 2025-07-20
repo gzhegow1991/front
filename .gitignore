@@ -1,0 +1,7 @@
+/.idea/
+/.editorconfig
+
+/vendor/
+/composer.lock
+
+/.ignore/
