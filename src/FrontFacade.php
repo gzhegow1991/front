@@ -32,14 +32,14 @@ class FrontFacade implements FrontInterface
     protected $config;
 
     /**
-     * @var PlatesEngineInterface
-     */
-    protected $engine;
-
-    /**
      * @var FrontStore
      */
     protected $store;
+
+    /**
+     * @var PlatesEngineInterface
+     */
+    protected $engine;
 
 
     public function __construct(

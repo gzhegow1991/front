@@ -22,18 +22,18 @@ class FrontTagManagerConfig extends AbstractConfig
     protected $appNameShort;
 
 
-    protected function validation(array &$refContext = []) : bool
+    protected function validation(array $context = []) : bool
     {
-        $t = Lib::parseThrow();
+        $theType = Lib::type();
 
         $this->appNameShort = $this->appNameShort ?? $this->appNameFull;
 
         if (null !== $this->appNameFull) {
-            $this->appNameFull = $t->string_not_empty($this->appNameFull);
+            $this->appNameFull = $theType->string_not_empty($this->appNameFull)->orThrow();
         }
 
         if (null !== $this->appNameShort) {
-            $this->appNameShort = $t->string_not_empty($this->appNameShort);
+            $this->appNameShort = $theType->string_not_empty($this->appNameShort)->orThrow();
         }
 
         return true;

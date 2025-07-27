@@ -31,8 +31,8 @@
     "require": {
         "php": "^7.3|^8.0",
 
-        "gzhegow/lib": "~1.1.0",
-        "gzhegow/league-plates-84": "^3.0"
+        "gzhegow/league-plates-84": "~3.6.0",
+        "gzhegow/lib": "~1.2.0"
     },
 
     "config": {
