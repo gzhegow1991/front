@@ -91,6 +91,10 @@ interface FrontInterface
 
     public function templatePath($name) : string;
 
+    public function templateDir($name) : string;
+
+    public function templateName($name) : string;
+
 
     public function make($name, array $data = []) : PlatesTemplateInterface;
 

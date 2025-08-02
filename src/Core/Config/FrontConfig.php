@@ -15,6 +15,9 @@ use Gzhegow\Front\Core\TagManager\FrontTagManagerConfig;
  * @property string                $directory
  * @property string|null           $fileExtension
  *
+ * @property string                $fnTemplateGet
+ * @property string                $fnTemplateCatch
+ *
  * @property string                $langCurrent
  * @property string                $langDefault
  */
@@ -38,6 +41,15 @@ class FrontConfig extends AbstractConfig
      * @var string|null
      */
     protected $fileExtension;
+
+    /**
+     * @var \Closure
+     */
+    protected $fnTemplateGet;
+    /**
+     * @var \Closure
+     */
+    protected $fnTemplateCatch;
 
     /**
      * @var string|null
@@ -67,6 +79,14 @@ class FrontConfig extends AbstractConfig
 
         if (null !== $this->fileExtension) {
             $this->fileExtension = $theType->string_not_empty($this->fileExtension)->orThrow();
+        }
+
+        if (null !== $this->fnTemplateGet) {
+            $this->fnTemplateGet = $theType->callable_object_closure($this->fnTemplateGet, null)->orThrow();
+        }
+
+        if (null !== $this->fnTemplateCatch) {
+            $this->fnTemplateCatch = $theType->callable_object_closure($this->fnTemplateCatch, null)->orThrow();
         }
 
         if (null !== $this->langCurrent) {

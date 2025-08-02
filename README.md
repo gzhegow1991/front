@@ -72,6 +72,23 @@ $config->configure(
         $config->directory = __DIR__ . '/../disc/html';
         $config->fileExtension = 'phtml';
         //
+        // > можно установить собственные обработчики GET (подключить контейнер?) и CATCH (не бросать исключения?) для шаблонов
+        $config->fnTemplateGet = function (string $name) {
+            /** @var \Gzhegow\Front\Package\League\Plates\Template\TemplateInterface $this */
+
+            $data = $this->getData();
+
+            return $data[ $name ] ?? null;
+        };
+        $config->fnTemplateCatch = function (\Throwable $e, string $content) {
+            /** @var \Gzhegow\Front\Package\League\Plates\Template\TemplateInterface $this */
+
+            $templateName = $this->name();
+            $eMessage = $e->getMessage();
+
+            return $content . " [ ERROR : {$templateName} : {$eMessage} ]";
+        };
+        //
         // > подключаем работу с языковыми шаблонами
         $config->langCurrent = 'ru';
         $config->langDefault = 'ru';

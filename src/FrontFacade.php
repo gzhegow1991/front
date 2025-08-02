@@ -8,6 +8,7 @@ use Gzhegow\Front\Exception\LogicException;
 use League\Plates\Template\Func as LeagueFunc;
 use League\Plates\Template\Folders as LeagueFolders;
 use Gzhegow\Front\Core\TagManager\FrontTagManagerInterface;
+use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface;
 use League\Plates\Extension\ExtensionInterface as LeagueExtensionInterface;
 use League\Plates\Template\ResolveTemplatePath as LeagueResolveTemplatePath;
 use Gzhegow\Front\Package\League\Plates\EngineInterface as PlatesEngineInterface;
@@ -59,6 +60,8 @@ class FrontFacade implements FrontInterface
 
         $this->store = $this->factory->newStore();
         $this->store->isDebug = $this->config->isDebug;
+        $this->store->fnTemplateGet = $this->config->fnTemplateGet;
+        $this->store->fnTemplateCatch = $this->config->fnTemplateCatch;
         $this->store->langCurrent = $this->config->langCurrent;
         $this->store->langDefault = $this->config->langDefault;
 
@@ -235,18 +238,32 @@ class FrontFacade implements FrontInterface
 
     public function templatePath($name) : string
     {
-        return $this->engine->path($name);
+        return $this->engine->make($name)->path();
+    }
+
+    public function templateDir($name) : string
+    {
+        return $this->engine->make($name)->dir();
+    }
+
+    public function templateName($name) : string
+    {
+        return $this->engine->make($name)->name();
     }
 
 
     public function make($name, array $data = []) : PlatesTemplateInterface
     {
-        return $this->engine->make($name, $data);
+        return $name instanceof TemplateInterface
+            ? $name
+            : $this->engine->make($name, $data);
     }
 
     public function render($name, array $data = []) : string
     {
-        return $this->engine->render($name, $data);
+        return $name instanceof TemplateInterface
+            ? $name->render($data)
+            : $this->engine->render($name, $data);
     }
 
 

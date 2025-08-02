@@ -14,6 +14,16 @@ interface TemplateInterface
     public function dir() : string;
 
 
+    /**
+     * @template-covariant T of mixed
+     *
+     * @param class-string<T>|null $classT
+     *
+     * @return T
+     */
+    public function get(string $name, ?string $classT = null);
+
+
     public function fetch($name, ?array $data = null) : string;
 
     public function render(?array $data = null) : string;

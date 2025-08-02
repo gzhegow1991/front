@@ -2,7 +2,6 @@
 
 namespace Gzhegow\Front\Package\League\Plates\Template;
 
-use Gzhegow\Lib\Lib;
 use Gzhegow\Front\Store\FrontStore;
 use League\Plates\Exception\TemplateNotFound;
 use Gzhegow\Front\Exception\RuntimeException;
@@ -47,11 +46,9 @@ class Template extends LeagueTemplate implements TemplateInterface
     }
 
 
-    public function name() : string
-    {
-        return $this->name->getName();
-    }
-
+    /**
+     * @see parent::path()
+     */
     public function path() : string
     {
         try {
@@ -67,7 +64,32 @@ class Template extends LeagueTemplate implements TemplateInterface
         return dirname($this->path());
     }
 
+    public function name() : string
+    {
+        return $this->name->getName();
+    }
 
+
+    /**
+     * @template-covariant T of mixed
+     *
+     * @param class-string<T>|null $classT
+     *
+     * @return T
+     */
+    public function get(string $name, ?string $classT = null)
+    {
+        if ($this->store->fnTemplateGet) {
+            return $this->store->fnTemplateGet->call($this, $name);
+        }
+
+        return $this->data[ $name ];
+    }
+
+
+    /**
+     * @see parent::fetch()
+     */
     public function fetch($name, ?array $data = null) : string
     {
         $dataTotal = $data ?? [];
@@ -86,12 +108,16 @@ class Template extends LeagueTemplate implements TemplateInterface
         return $html;
     }
 
+    /**
+     * @see parent::render()
+     */
     public function render(?array $data = null) : string
     {
         $dataBefore = $this->data($data);
 
+        ob_start();
+
         try {
-            ob_start();
 
             /**
              * @noinspection PhpMethodParametersCountMismatchInspection
@@ -105,28 +131,15 @@ class Template extends LeagueTemplate implements TemplateInterface
             $content = ob_get_clean();
         }
         catch ( \Throwable $e ) {
-            ob_end_clean();
+            $content = ob_get_clean();
 
-            $eMessage = $e->getMessage();
-
-            $templateName = $this->name->getName();
-
-            if (! $this->store->isDebug) {
-                $content = "[ ERROR: {$templateName} / {$eMessage} ]";
-
-            } else {
-                $linesDebug = [];
-                $linesDebug[] = "[ ERROR: {$templateName} ]";
-                $linesDebug[] = $e->getMessage();
-                $linesDebug[] = '';
-                $linesDebug[] = $e->getFile() . ': ' . $e->getLine();
-
-                $linesDebug = array_merge(
-                    $linesDebug,
-                    Lib::debugThrowabler()->getThrowableTraceLines($e)
-                );
-
-                $content = implode("\n", $linesDebug);
+            if ($this->store->fnTemplateCatch) {
+                try {
+                    $content = $this->store->fnTemplateCatch->call($this, $e, $content);
+                }
+                catch ( \Throwable $e ) {
+                    throw new RuntimeException($e);
+                }
             }
         }
 
