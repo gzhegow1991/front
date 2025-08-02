@@ -5,7 +5,7 @@ namespace Gzhegow\Front\Core\Resolver;
 use League\Plates\Template\Name;
 
 
-class CallableResolver extends AbstractResolver
+class FrontCallableResolver extends AbstractFrontResolver
 {
     /**
      * @var \Closure

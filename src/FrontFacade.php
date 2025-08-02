@@ -6,7 +6,7 @@ use Gzhegow\Front\Store\FrontStore;
 use Gzhegow\Front\Core\Config\FrontConfig;
 use Gzhegow\Front\Exception\LogicException;
 use League\Plates\Template\Func as LeagueFunc;
-use Gzhegow\Front\Core\Resolver\ResolverInterface;
+use Gzhegow\Front\Core\Resolver\FrontResolverInterface;
 use League\Plates\Template\Folders as LeagueFolders;
 use Gzhegow\Front\Core\TagManager\FrontTagManagerInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface;
@@ -44,7 +44,7 @@ class FrontFacade implements FrontInterface
     protected $engine;
 
     /**
-     * @var ResolverInterface
+     * @var FrontResolverInterface
      */
     protected $resolver;
 
@@ -87,12 +87,12 @@ class FrontFacade implements FrontInterface
     }
 
 
-    public function resolverGet() : ?ResolverInterface
+    public function resolverGet() : ?FrontResolverInterface
     {
         return $this->resolver;
     }
 
-    public function resolverSet(?ResolverInterface $resolver) : ?ResolverInterface
+    public function resolverSet(?FrontResolverInterface $resolver) : ?FrontResolverInterface
     {
         $last = $this->resolver;
 

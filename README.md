@@ -118,7 +118,7 @@ $front->folderAdd('html', __DIR__ . '/../disc/html');
 // $plates->folderAdd('sections', __DIR__ . '/../disc/html/sections');
 
 // > можно добавить resolver, чтобы, например, подключить языковые шаблоны или искать шаблон в нескольких папках
-$front->resolverSet(new \Gzhegow\Front\Core\Resolver\I18nResolver());
+$front->resolverSet(new \Gzhegow\Front\Core\Resolver\FrontI18nResolver());
 // $front->resolverSet(new \Gzhegow\Front\Core\Resolver\DefaultResolver());
 // $front->resolverSet(new \Gzhegow\Front\Core\Resolver\CallableResolver(
 //     function (\League\Plates\Template\Name $name) { },

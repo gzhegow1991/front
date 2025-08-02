@@ -8,7 +8,7 @@ use Gzhegow\Front\Store\FrontStore;
 /**
  * @see ResolveTemplatePathOriginal
  */
-abstract class AbstractResolver implements ResolverInterface
+abstract class AbstractFrontResolver implements FrontResolverInterface
 {
     /**
      * @var FrontStore

@@ -6,7 +6,7 @@ use League\Plates\Template\Name;
 use Gzhegow\Front\Store\FrontStore;
 
 
-interface ResolverInterface
+interface FrontResolverInterface
 {
     /**
      * @return static

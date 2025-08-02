@@ -7,7 +7,7 @@ use League\Plates\Template\Name;
 use Gzhegow\Front\Exception\Runtime\TemplateNotFoundException;
 
 
-class DefaultResolver extends AbstractResolver
+class FrontDefaultResolver extends AbstractFrontResolver
 {
     public function resolve(Name $name) : string
     {
