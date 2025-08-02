@@ -6,13 +6,14 @@ use Gzhegow\Front\Store\FrontStore;
 use Gzhegow\Front\Core\Config\FrontConfig;
 use Gzhegow\Front\Exception\LogicException;
 use League\Plates\Template\Func as LeagueFunc;
+use Gzhegow\Front\Core\Resolver\ResolverInterface;
 use League\Plates\Template\Folders as LeagueFolders;
 use Gzhegow\Front\Core\TagManager\FrontTagManagerInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface;
 use League\Plates\Extension\ExtensionInterface as LeagueExtensionInterface;
-use League\Plates\Template\ResolveTemplatePath as LeagueResolveTemplatePath;
 use Gzhegow\Front\Package\League\Plates\EngineInterface as PlatesEngineInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface as PlatesTemplateInterface;
+use Gzhegow\Front\Package\League\Plates\Template\ResolveTemplatePath\FrontResolveTemplatePath;
 
 
 class FrontFacade implements FrontInterface
@@ -41,6 +42,11 @@ class FrontFacade implements FrontInterface
      * @var PlatesEngineInterface
      */
     protected $engine;
+
+    /**
+     * @var ResolverInterface
+     */
+    protected $resolver;
 
 
     public function __construct(
@@ -81,19 +87,29 @@ class FrontFacade implements FrontInterface
     }
 
 
-    public function resolverGet() : LeagueResolveTemplatePath
+    public function resolverGet() : ?ResolverInterface
     {
-        return $this->engine->getResolveTemplatePath();
+        return $this->resolver;
     }
 
-    /**
-     * @return static
-     */
-    public function resolverSet(LeagueResolveTemplatePath $resolver)
+    public function resolverSet(?ResolverInterface $resolver) : ?ResolverInterface
     {
-        $this->engine->setResolveTemplatePath($resolver);
+        $last = $this->resolver;
 
-        return $this;
+        if (null === $resolver) {
+            $this->engine->unsetResolveTemplatePath();
+
+        } else {
+            $resolver->setStore($this->store);
+
+            $this->engine->setResolveTemplatePath(
+                new FrontResolveTemplatePath($resolver)
+            );
+        }
+
+        $this->resolver = $resolver;
+
+        return $last;
     }
 
 

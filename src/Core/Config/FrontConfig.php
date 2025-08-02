@@ -15,8 +15,8 @@ use Gzhegow\Front\Core\TagManager\FrontTagManagerConfig;
  * @property string                $directory
  * @property string|null           $fileExtension
  *
- * @property string                $fnTemplateGet
- * @property string                $fnTemplateCatch
+ * @property \Closure              $fnTemplateGet
+ * @property \Closure              $fnTemplateCatch
  *
  * @property string                $langCurrent
  * @property string                $langDefault

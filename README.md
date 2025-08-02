@@ -72,19 +72,15 @@ $config->configure(
         $config->directory = __DIR__ . '/../disc/html';
         $config->fileExtension = 'phtml';
         //
-        // > можно установить собственные обработчики GET (подключить контейнер?) и CATCH (не бросать исключения?) для шаблонов
-        $config->fnTemplateGet = function (string $name) {
-            /** @var \Gzhegow\Front\Package\League\Plates\Template\TemplateInterface $this */
-
-            $data = $this->getData();
+        // > можно установить собственные обработчики RESOLVE (подключить языки?), GET (подключить контейнер?) и CATCH (не бросать исключения?) для шаблонов
+        $config->fnTemplateGet = function (string $name, \Gzhegow\Front\Package\League\Plates\Template\TemplateInterface $template) {
+            $data = $template->getData();
 
             return $data[ $name ] ?? null;
         };
-        $config->fnTemplateCatch = function (\Throwable $e, string $content) {
-            /** @var \Gzhegow\Front\Package\League\Plates\Template\TemplateInterface $this */
-
-            $templateName = $this->name();
+        $config->fnTemplateCatch = function (\Throwable $e, string $content, \Gzhegow\Front\Package\League\Plates\Template\TemplateInterface $template) {
             $eMessage = $e->getMessage();
+            $templateName = $template->name();
 
             return $content . " [ ERROR : {$templateName} : {$eMessage} ]";
         };
@@ -121,16 +117,13 @@ $front->folderAdd('html', __DIR__ . '/../disc/html');
 // $plates->folderAdd('pages', __DIR__ . '/../disc/html/pages');
 // $plates->folderAdd('sections', __DIR__ . '/../disc/html/sections');
 
-// > получаем экземпляр стора, который нужен для резольвера
-// > стор хранит состояние шаблонизатора, и позволяет им делится с другими объектами
-$store = $front->getStore();
-
-// > создаем резольвер
-// > его задача поиск шаблонов в папке до попытки их отрисовать, иначе исключение будет брошено на include $file
-// > кроме того это позволяет подменять одни шаблоны на другие
-// > после того, как синтаксис превратится в имя файла, например, пробовать найти языковой шаблон
-$resolver = new \Gzhegow\Front\Package\League\Plates\Template\ResolveTemplatePath\LanguageNameAndFolderResolveTemplatePath($store);
-$front->resolverSet($resolver);
+// > можно добавить resolver, чтобы, например, подключить языковые шаблоны или искать шаблон в нескольких папках
+$front->resolverSet(new \Gzhegow\Front\Core\Resolver\I18nResolver());
+// $front->resolverSet(new \Gzhegow\Front\Core\Resolver\DefaultResolver());
+// $front->resolverSet(new \Gzhegow\Front\Core\Resolver\CallableResolver(
+//     function (\League\Plates\Template\Name $name) { },
+//     $fnArgs = [ 1, 2, 3 ]
+// ));
 
 // > создаем фасад, если удобно пользоваться статикой
 \Gzhegow\Front\Front::setFacade($front);
@@ -148,7 +141,7 @@ $fn = function () use ($ffn, $front) {
     $before = $front->langDefaultSet('ru');
 
     $front->langCurrentSet('ru');
-    $ffn->print($front->render('html::pages/demo/page.demo'));
+    $ffn->print($front->render('html::pages/demo/page.demo.phtml'));
     echo "\n";
 
     $front->langCurrentSet('en');

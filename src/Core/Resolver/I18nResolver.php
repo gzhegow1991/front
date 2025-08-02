@@ -1,29 +1,15 @@
 <?php
 
-namespace Gzhegow\Front\Package\League\Plates\Template\ResolveTemplatePath;
+namespace Gzhegow\Front\Core\Resolver;
 
 use Gzhegow\Lib\Lib;
 use League\Plates\Template\Name;
-use Gzhegow\Front\Store\FrontStore;
 use Gzhegow\Front\Exception\Runtime\TemplateNotFoundException;
-use Gzhegow\Front\Package\League\Plates\Template\ResolveTemplatePath;
 
 
-class LanguageNameAndFolderResolveTemplatePath implements ResolveTemplatePath
+class I18nResolver extends AbstractResolver
 {
-    /**
-     * @var FrontStore
-     */
-    protected $store;
-
-
-    public function __construct(FrontStore $store)
-    {
-        $this->store = $store;
-    }
-
-
-    public function __invoke(Name $name) : string
+    public function resolve(Name $name) : string
     {
         $theFs = Lib::fs();
         $theStr = Lib::str();
@@ -34,6 +20,16 @@ class LanguageNameAndFolderResolveTemplatePath implements ResolveTemplatePath
 
         $templatePathAbsoluteMain = $name->getPath();
 
+        $piTemplatePathAbsoluteMain = $theFs->pathinfo($templatePathAbsoluteMain);
+
+        $dirname = $piTemplatePathAbsoluteMain[ 'dirname' ];
+
+        $basename = $piTemplatePathAbsoluteMain[ 'basename' ];
+        $basename = $theStr->rcrop($basename, '.' . $fileExtension, false);
+        $basename .= '.' . $fileExtension;
+
+        $templatePathAbsoluteMain = "{$dirname}/{$basename}";
+
         $pathes = [];
 
         $hasLangCurrent = false;
@@ -42,11 +38,6 @@ class LanguageNameAndFolderResolveTemplatePath implements ResolveTemplatePath
             || ($hasLangCurrent = (null !== $this->store->langCurrent))
             || ($hasLangDefault = (null !== $this->store->langDefault))
         ) {
-            $pi = $theFs->pathinfo($templatePathAbsoluteMain);
-
-            $dirname = $pi[ 'dirname' ];
-            $basename = $pi[ 'basename' ];
-
             if ($hasLangCurrent) {
                 $langCurrent = $this->store->langCurrent;
 
@@ -72,12 +63,6 @@ class LanguageNameAndFolderResolveTemplatePath implements ResolveTemplatePath
         $pathes[ $absolutePathNew ] = $relativePathNew;
 
         while ( null !== ($path = key($pathes)) ) {
-            $basename = basename($path);
-            $basename = $theStr->rcrop($basename, '.' . $fileExtension, false);
-
-            $dirname = dirname($path);
-            $path = "{$dirname}/{$basename}.{$fileExtension}";
-
             if (is_file($path)) {
                 return $path;
             }

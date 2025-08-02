@@ -4,9 +4,9 @@ namespace Gzhegow\Front;
 
 use Gzhegow\Front\Store\FrontStore;
 use League\Plates\Template\Func as LeagueFunc;
+use Gzhegow\Front\Core\Resolver\ResolverInterface;
 use League\Plates\Template\Folders as LeagueFolders;
 use League\Plates\Extension\ExtensionInterface as LeagueExtensionInterface;
-use League\Plates\Template\ResolveTemplatePath as LeagueResolveTemplatePath;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface as PlatesTemplateInterface;
 
 
@@ -15,12 +15,9 @@ interface FrontInterface
     public function getStore() : FrontStore;
 
 
-    public function resolverGet() : LeagueResolveTemplatePath;
+    public function resolverGet() : ?ResolverInterface;
 
-    /**
-     * @return static
-     */
-    public function resolverSet(LeagueResolveTemplatePath $resolver);
+    public function resolverSet(?ResolverInterface $resolver) : ?ResolverInterface;
 
 
     public function directoryGet() : string;

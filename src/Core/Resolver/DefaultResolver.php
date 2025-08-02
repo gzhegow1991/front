@@ -1,19 +1,15 @@
 <?php
 
-namespace Gzhegow\Front\Package\League\Plates\Template\ResolveTemplatePath;
+namespace Gzhegow\Front\Core\Resolver;
 
 use Gzhegow\Lib\Lib;
 use League\Plates\Template\Name;
 use Gzhegow\Front\Exception\Runtime\TemplateNotFoundException;
-use Gzhegow\Front\Package\League\Plates\Template\ResolveTemplatePath;
 
 
-/**
- * @see ResolveTemplatePathOriginal
- */
-class NameAndFolderResolveTemplatePath implements ResolveTemplatePath
+class DefaultResolver extends AbstractResolver
 {
-    public function __invoke(Name $name) : string
+    public function resolve(Name $name) : string
     {
         $theFs = Lib::fs();
         $theStr = Lib::str();
@@ -22,21 +18,23 @@ class NameAndFolderResolveTemplatePath implements ResolveTemplatePath
 
         $folderPathAbsolute = $name->getFolder()->getPath();
 
-        $templatePathAbsolute = $name->getPath();
+        $templatePathAbsoluteMain = $name->getPath();
 
-        $absolutePathNew = $templatePathAbsolute;
+        $piTemplatePathAbsoluteMain = $theFs->pathinfo($templatePathAbsoluteMain);
+
+        $dirname = $piTemplatePathAbsoluteMain[ 'dirname' ];
+
+        $basename = $piTemplatePathAbsoluteMain[ 'basename' ];
+        $basename = $theStr->rcrop($basename, '.' . $fileExtension, false);
+        $basename .= '.' . $fileExtension;
+
+        $absolutePathNew = "{$dirname}/{$basename}";
         $relativePathNew = $theFs->path_relative($absolutePathNew, $folderPathAbsolute);
 
         $pathes = [];
         $pathes[ $absolutePathNew ] = $relativePathNew;
 
         while ( null !== ($path = key($pathes)) ) {
-            $basename = basename($path);
-            $basename = $theStr->rcrop($basename, '.' . $fileExtension, false);
-
-            $dirname = dirname($path);
-            $path = "{$dirname}/{$basename}.{$fileExtension}";
-
             if (is_file($path)) {
                 return $path;
             }

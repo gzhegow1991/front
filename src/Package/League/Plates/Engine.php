@@ -6,8 +6,10 @@ use Gzhegow\Front\Store\FrontStore;
 use League\Plates\Engine as LeagueEngine;
 use Gzhegow\Front\FrontFactoryInterface;
 use Gzhegow\Front\Exception\RuntimeException;
+use League\Plates\Template\ResolveTemplatePath;
 use Gzhegow\Front\Core\TagManager\FrontTagManagerInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface;
+use League\Plates\Template\ResolveTemplatePath\NameAndFolderResolveTemplatePath;
 
 
 class Engine extends LeagueEngine implements EngineInterface
@@ -25,6 +27,11 @@ class Engine extends LeagueEngine implements EngineInterface
      */
     protected $store;
 
+    /**
+     * @var ResolveTemplatePath
+     */
+    protected $resolveTemplatePath;
+
 
     public function __construct(
         FrontFactoryInterface $factory,
@@ -33,8 +40,7 @@ class Engine extends LeagueEngine implements EngineInterface
         //
         FrontStore $store,
         //
-        string $directory,
-        ?string $fileExtension = null
+        string $directory, ?string $fileExtension = null
     )
     {
         $fileExtension = $fileExtension ?? 'phtml';
@@ -45,7 +51,35 @@ class Engine extends LeagueEngine implements EngineInterface
 
         $this->store = $store;
 
+        $this->resolveTemplatePath = new NameAndFolderResolveTemplatePath();
+
         parent::__construct($directory, $fileExtension);
+    }
+
+
+    public function getResolveTemplatePath() : ResolveTemplatePath
+    {
+        return $this->resolveTemplatePath;
+    }
+
+    /**
+     * @return static
+     */
+    public function setResolveTemplatePath(ResolveTemplatePath $resolveTemplatePath)
+    {
+        $this->resolveTemplatePath = $resolveTemplatePath;
+
+        return $this;
+    }
+
+    /**
+     * @return static
+     */
+    public function unsetResolveTemplatePath()
+    {
+        $this->resolveTemplatePath = new NameAndFolderResolveTemplatePath();
+
+        return $this;
     }
 
 

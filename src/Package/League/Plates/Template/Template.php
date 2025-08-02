@@ -2,6 +2,7 @@
 
 namespace Gzhegow\Front\Package\League\Plates\Template;
 
+use Gzhegow\Lib\Lib;
 use Gzhegow\Front\Store\FrontStore;
 use League\Plates\Exception\TemplateNotFound;
 use Gzhegow\Front\Exception\RuntimeException;
@@ -79,11 +80,16 @@ class Template extends LeagueTemplate implements TemplateInterface
      */
     public function get(string $name, ?string $classT = null)
     {
-        if ($this->store->fnTemplateGet) {
-            return $this->store->fnTemplateGet->call($this, $name);
+        if (null !== $this->store->fnTemplateGet) {
+            return call_user_func_array(
+                $this->store->fnTemplateGet,
+                [ $name, $this ]
+            );
         }
 
-        return $this->data[ $name ];
+        $theType = Lib::type();
+
+        return $theType->key_exists($name, $this->data)->orThrow();
     }
 
 
@@ -100,6 +106,9 @@ class Template extends LeagueTemplate implements TemplateInterface
 
         try {
             $html = $template->render();
+        }
+        catch ( \RuntimeException $e ) {
+            throw $e;
         }
         catch ( \Throwable $e ) {
             throw new RuntimeException($e);
@@ -133,13 +142,23 @@ class Template extends LeagueTemplate implements TemplateInterface
         catch ( \Throwable $e ) {
             $content = ob_get_clean();
 
-            if ($this->store->fnTemplateCatch) {
+            if (null !== $this->store->fnTemplateCatch) {
+
                 try {
-                    $content = $this->store->fnTemplateCatch->call($this, $e, $content);
+                    $content = call_user_func_array(
+                        $this->store->fnTemplateCatch,
+                        [ $e, $content, $this ]
+                    );
+                }
+                catch ( \RuntimeException $e ) {
+                    throw $e;
                 }
                 catch ( \Throwable $e ) {
                     throw new RuntimeException($e);
                 }
+
+            } else {
+                throw new RuntimeException($e);
             }
         }
 
