@@ -4,7 +4,6 @@ namespace Gzhegow\Front\Package\League\Plates\Template;
 
 use Gzhegow\Lib\Lib;
 use Gzhegow\Front\Store\FrontStore;
-use League\Plates\Exception\TemplateNotFound;
 use Gzhegow\Front\Exception\RuntimeException;
 use Gzhegow\Front\Package\League\Plates\Engine;
 use League\Plates\Template\Template as LeagueTemplate;
@@ -27,6 +26,11 @@ class Template extends LeagueTemplate implements TemplateInterface
      * @var Engine
      */
     protected $engine;
+
+    /**
+     * @var string
+     */
+    protected $pathResolved;
 
 
     public function __construct(
@@ -52,12 +56,23 @@ class Template extends LeagueTemplate implements TemplateInterface
      */
     public function path() : string
     {
+        if (null !== $this->pathResolved) {
+            return $this->pathResolved;
+        }
+
+        $theResolveTemplatePath = $this->engine->getResolveTemplatePath();
+
         try {
-            return ($this->engine->getResolveTemplatePath())($this->name);
+            $pathResolved = call_user_func_array(
+                $theResolveTemplatePath,
+                [ $this->name ]
+            );
         }
-        catch ( TemplateNotFound $e ) {
-            return $e->paths()[ 0 ];
+        catch ( \Throwable $e ) {
+            throw new RuntimeException($e);
         }
+
+        return $this->pathResolved = $pathResolved;
     }
 
     public function dir() : string
@@ -68,6 +83,16 @@ class Template extends LeagueTemplate implements TemplateInterface
     public function name() : string
     {
         return $this->name->getName();
+    }
+
+    public function relpath() : string
+    {
+        $theFs = Lib::php();
+
+        return $theFs->path_relative(
+            $this->path(),
+            $this->engine->getDirectory()
+        );
     }
 
 
@@ -127,7 +152,6 @@ class Template extends LeagueTemplate implements TemplateInterface
         ob_start();
 
         try {
-
             /**
              * @noinspection PhpMethodParametersCountMismatchInspection
              */
@@ -170,6 +194,22 @@ class Template extends LeagueTemplate implements TemplateInterface
             if ('' === $l) {
                 unset($lines[ $i ]);
             }
+        }
+
+        if ($this->store->isDebug) {
+            $relpath = $this->relpath();
+
+            $lines = array_merge(
+                [
+                    '',
+                    "<!-- [ >>> {$relpath} ] -->",
+                ],
+                $lines,
+                [
+                    "<!-- [ <<< {$relpath} ] -->",
+                    '',
+                ],
+            );
         }
 
         $content = implode("\n", $lines) . "\n";

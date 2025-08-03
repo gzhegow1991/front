@@ -158,20 +158,38 @@ $test = $ffn->test($fn);
 $test->expectStdout('
 "TEST 1"
 
-"<div>Пример шаблона</div>\n
+"<!-- [ >>> layouts/demo/ru/layout.demo.phtml ] -->\n
+<div>Пример шаблона</div>\n
 <div>\n
-    <div>Пример блока</div>\n
-</div>"
+<!-- [ >>> pages/demo/page.demo.phtml ] -->\n
+<!-- [ >>> blocks/demo/ru/block.demo.phtml ] -->\n
+<div>Пример блока</div>\n
+<!-- [ <<< blocks/demo/ru/block.demo.phtml ] -->\n
+<!-- [ <<< pages/demo/page.demo.phtml ] -->\n
+</div>\n
+<!-- [ <<< layouts/demo/ru/layout.demo.phtml ] -->"
 
-"<div>Demo Layout</div>\n
+"<!-- [ >>> layouts/demo/en/layout.demo.phtml ] -->\n
+<div>Demo Layout</div>\n
 <div>\n
-    <div>Demo Block</div>\n
-</div>"
+<!-- [ >>> pages/demo/page.demo.phtml ] -->\n
+<!-- [ >>> blocks/demo/en/block.demo.phtml ] -->\n
+<div>Demo Block</div>\n
+<!-- [ <<< blocks/demo/en/block.demo.phtml ] -->\n
+<!-- [ <<< pages/demo/page.demo.phtml ] -->\n
+</div>\n
+<!-- [ <<< layouts/demo/en/layout.demo.phtml ] -->"
 
-"<div>Пример шаблона</div>\n
+"<!-- [ >>> layouts/demo/layout.demo.phtml ] -->\n
+<div>Пример шаблона</div>\n
 <div>\n
-    <div>Пример блока</div>\n
-</div>"
+<!-- [ >>> pages/demo/page.demo.phtml ] -->\n
+<!-- [ >>> blocks/demo/block.demo.phtml ] -->\n
+<div>Пример блока</div>\n
+<!-- [ <<< blocks/demo/block.demo.phtml ] -->\n
+<!-- [ <<< pages/demo/page.demo.phtml ] -->\n
+</div>\n
+<!-- [ <<< layouts/demo/layout.demo.phtml ] -->"
 ');
 $test->run();
 ```
