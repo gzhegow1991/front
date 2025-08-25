@@ -2,18 +2,25 @@
 
 namespace Gzhegow\Front;
 
-use Gzhegow\Front\Store\FrontStore;
+use Gzhegow\Lib\Lib;
+use Gzhegow\Front\Core\Struct\Folder;
+use Gzhegow\Front\Core\Struct\Remote;
+use Gzhegow\Front\Core\Store\FrontStore;
 use Gzhegow\Front\Core\Config\FrontConfig;
 use Gzhegow\Front\Exception\LogicException;
-use League\Plates\Template\Func as LeagueFunc;
-use Gzhegow\Front\Core\Resolver\FrontResolverInterface;
-use League\Plates\Template\Folders as LeagueFolders;
+use Gzhegow\Front\Exception\RuntimeException;
 use Gzhegow\Front\Core\TagManager\FrontTagManagerInterface;
+use Gzhegow\Front\Core\AssetManager\FrontAssetManagerInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface;
-use League\Plates\Extension\ExtensionInterface as LeagueExtensionInterface;
+use Gzhegow\Front\Core\TemplateResolver\FrontDefaultTemplateResolver;
+use Gzhegow\Front\Core\TemplateResolver\FrontTemplateResolverInterface;
 use Gzhegow\Front\Package\League\Plates\EngineInterface as PlatesEngineInterface;
+use Gzhegow\Front\Core\AssetManager\LocalSrcResolver\FrontDefaultAssetLocalSrcResolver;
+use Gzhegow\Front\Core\AssetManager\LocalSrcResolver\FrontAssetLocalSrcResolverInterface;
+use Gzhegow\Front\Core\AssetManager\RemoteSrcResolver\FrontDefaultAssetRemoteSrcResolver;
+use Gzhegow\Front\Core\AssetManager\RemoteSrcResolver\FrontAssetRemoteSrcResolverInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface as PlatesTemplateInterface;
-use Gzhegow\Front\Package\League\Plates\Template\ResolveTemplatePath\FrontResolveTemplatePath;
+use Gzhegow\Front\Package\League\Plates\Template\ResolveTemplatePath\TemplateResolverResolveTemplatePath;
 
 
 class FrontFacade implements FrontInterface
@@ -23,6 +30,10 @@ class FrontFacade implements FrontInterface
      */
     protected $factory;
 
+    /**
+     * @var FrontAssetManagerInterface
+     */
+    protected $assetManager;
     /**
      * @var FrontTagManagerInterface
      */
@@ -44,40 +55,95 @@ class FrontFacade implements FrontInterface
     protected $engine;
 
     /**
-     * @var FrontResolverInterface
+     * @var FrontTemplateResolverInterface
      */
-    protected $resolver;
+    protected $templateResolver;
 
 
     public function __construct(
         FrontFactoryInterface $factory,
         //
+        FrontAssetManagerInterface $assetManager,
         FrontTagManagerInterface $tagManager,
         //
-        FrontConfig $config
+        FrontConfig $config,
+        //
+        ?FrontTemplateResolverInterface $templateResolver = null,
+        ?FrontAssetLocalSrcResolverInterface $assetLocalSrcResolver = null,
+        ?FrontAssetRemoteSrcResolverInterface $assetRemoteSrcResolver = null
     )
     {
+        $templateResolver = $templateResolver ?? new FrontDefaultTemplateResolver();
+        $assetLocalSrcResolver = $assetLocalSrcResolver ?? new FrontDefaultAssetLocalSrcResolver();
+        $assetRemoteSrcResolver = $assetRemoteSrcResolver ?? new FrontDefaultAssetRemoteSrcResolver();
+
         $this->factory = $factory;
 
+        $this->assetManager = $assetManager;
         $this->tagManager = $tagManager;
 
         $this->config = $config;
         $this->config->validate();
 
+        $directory = $this->config->directory;
+        $fileExtension = $this->config->fileExtension;
+        $publicPath = $this->config->publicPath;
+
         $this->store = $this->factory->newStore();
         $this->store->isDebug = $this->config->isDebug;
-        $this->store->fnTemplateGet = $this->config->fnTemplateGet;
-        $this->store->fnTemplateCatch = $this->config->fnTemplateCatch;
-        $this->store->langCurrent = $this->config->langCurrent;
-        $this->store->langDefault = $this->config->langDefault;
+        $this->store->directory = $directory;
+        $this->store->fileExtension = $fileExtension;
+        $this->store->publicPath = $publicPath;
+        $this->store->templateLangCurrent = $this->config->langCurrent;
+        $this->store->templateLangDefault = $this->config->langDefault;
+        $this->store->appNameShort = $this->config->appNameShort;
+        $this->store->appNameFull = $this->config->appNameFull;
+        $this->store->assetVersion = $this->config->assetVersion;
+        $this->store->assetExtensionsMap = $this->config->assetExtensionsMap;
 
         $this->engine = $this->factory->newPlatesEngine(
+            $this->assetManager,
             $this->tagManager,
             //
             $this->store,
             //
-            $this->config->directory, $this->config->fileExtension
+            $directory,
+            $fileExtension
         );
+
+        $this->initialize();
+
+        $this->templateResolver($templateResolver);
+        $this->assetLocalSrcResolver($assetLocalSrcResolver);
+        $this->assetRemoteSrcResolver($assetRemoteSrcResolver);
+
+        $folderRoot = Folder::fromArray([
+            'alias'       => Front::ROOT_FOLDER_ALIAS,
+            'directory'   => $this->config->directory,
+            'public_path' => $this->config->publicPath,
+        ])->orThrow();
+
+        $this->folderAdd($folderRoot);
+
+        foreach ( $this->config->folders as $folder ) {
+            $this->folderAdd($folder);
+        }
+
+        foreach ( $this->config->remotes as $remote ) {
+            $this->remoteAdd($remote);
+        }
+    }
+
+    protected function initialize() : void
+    {
+        $this->assetManager->initialize($this);
+        $this->tagManager->initialize($this);
+    }
+
+
+    public function getEngine() : PlatesEngineInterface
+    {
+        return $this->engine;
     }
 
 
@@ -87,87 +153,150 @@ class FrontFacade implements FrontInterface
     }
 
 
-    public function resolverGet() : ?FrontResolverInterface
-    {
-        return $this->resolver;
-    }
-
-    public function resolverSet(?FrontResolverInterface $resolver) : ?FrontResolverInterface
-    {
-        $last = $this->resolver;
-
-        if (null === $resolver) {
-            $this->engine->unsetResolveTemplatePath();
-
-        } else {
-            $resolver->setStore($this->store);
-
-            $this->engine->setResolveTemplatePath(
-                new FrontResolveTemplatePath($resolver)
-            );
-        }
-
-        $this->resolver = $resolver;
-
-        return $last;
-    }
-
-
     public function directoryGet() : string
     {
-        return $this->engine->getDirectory();
+        return $this->store->directory;
     }
-
-    /**
-     * @return static
-     */
-    public function directorySet($directory)
-    {
-        $this->engine->setDirectory($directory);
-
-        return $this;
-    }
-
 
     public function fileExtensionGet() : string
     {
-        return $this->engine->getFileExtension();
+        return $this->store->fileExtension;
+    }
+
+    public function publicPathGet() : ?string
+    {
+        return $this->store->publicPath;
+    }
+
+
+    /**
+     * @return Folder[]
+     */
+    public function getFolders() : array
+    {
+        return $this->store->folders;
+    }
+
+    public function getFolder(int $id) : Folder
+    {
+        if (! isset($this->store->folders[ $id ])) {
+            throw new RuntimeException(
+                [ 'The `id` is missing: ' . $id, $id ]
+            );
+        }
+
+        return $this->store->folders[ $id ];
+    }
+
+    public function getFolderByAlias(string $alias) : Folder
+    {
+        $theType = Lib::type();
+
+        $aliasString = $theType->string_not_empty($alias)->orThrow();
+
+        if (! isset($this->store->foldersByAlias[ $aliasString ])) {
+            throw new RuntimeException(
+                [ 'The `alias` is missing: ' . $alias, $alias ]
+            );
+        }
+
+        $folder = $this->store->foldersByAlias[ $aliasString ];
+
+        return $folder;
+    }
+
+    public function getFolderByDirectory(string $directory) : Folder
+    {
+        $theType = Lib::type();
+
+        $directoryRealpath = $theType->dirpath_realpath($directory)->orThrow();
+
+        if (! isset($this->store->foldersByDirectory[ $directoryRealpath ])) {
+            throw new RuntimeException(
+                [ 'The `directory` is missing: ' . $directory, $directory ]
+            );
+        }
+
+        $folder = $this->store->foldersByDirectory[ $directoryRealpath ];
+
+        return $folder;
     }
 
     /**
-     * @return static
+     * @param Folder|array $folder
      */
-    public function fileExtensionSet($fileExtension)
+    public function folderAdd($folder) : int
     {
-        $this->engine->setFileExtension($fileExtension);
+        $folderObject = Folder::from($folder)->orThrow();
 
-        return $this;
+        $folderRealpath = $folderObject->getDirectory();
+        $folderAlias = $folderObject->getAlias();
+
+        $i = array_key_last($this->store->folders);
+        $i++;
+
+        $this->store->folders[ $i ] = $folderObject;
+        $this->store->foldersByAlias[ $folderAlias ] = $folderObject;
+        $this->store->foldersByDirectory[ $folderRealpath ] = $folderObject;
+
+        $this->engine->addFolder($folderAlias, $folderRealpath, false);
+
+        return $i;
     }
 
 
-    public function folderGetAll() : LeagueFolders
+    /**
+     * @return Remote[]
+     */
+    public function getRemotes() : array
     {
-        return $this->engine->getFolders();
+        return $this->store->remotes;
+    }
+
+    public function getRemote(int $id) : Remote
+    {
+        if (! isset($this->store->remotes[ $id ])) {
+            throw new RuntimeException(
+                [ 'The `id` is missing: ' . $id, $id ]
+            );
+        }
+
+        return $this->store->remotes[ $id ];
+    }
+
+    public function getRemoteByAlias(string $alias) : Remote
+    {
+        $theType = Lib::type();
+
+        $aliasString = $theType->string_not_empty($alias)->orThrow();
+
+        if (! isset($this->store->remotesByAlias[ $aliasString ])) {
+            throw new RuntimeException(
+                [ 'The `alias` is missing: ' . $alias, $alias ]
+            );
+        }
+
+        $remote = $this->store->remotesByAlias[ $aliasString ];
+
+        return $remote;
     }
 
     /**
-     * @return static
+     * @param Remote|array $remote
      */
-    public function folderAdd($name, $directory, $fallback = false)
+    public function remoteAdd($remote) : int
     {
-        $this->engine->addFolder($name, $directory, $fallback);
+        $remoteObject = Remote::from($remote)->orThrow();
 
-        return $this;
-    }
+        $remoteAlias = $remoteObject->getAlias();
 
-    /**
-     * @return static
-     */
-    public function folderRemove($name)
-    {
-        $this->engine->removeFolder($name);
+        $i = array_key_last($this->store->remotes);
+        $i++;
 
-        return $this;
+        $this->store->remotes[ $i ] = $remoteObject;
+        $this->store->remotesByAlias[ $remoteAlias ] = $remoteObject;
+
+        return $i;
     }
 
 
@@ -187,63 +316,29 @@ class FrontFacade implements FrontInterface
     }
 
 
-    public function functionExists($name, ?LeagueFunc &$func = null) : bool
+    /**
+     * @param FrontTemplateResolverInterface|false|null $templateResolver
+     */
+    public function templateResolver($templateResolver = null) : ?FrontTemplateResolverInterface
     {
-        $func = null;
+        $last = $this->templateResolver;
 
-        if ($this->engine->doesFunctionExist($name)) {
-            $func = $this->engine->getFunction($name);
+        if (null !== $templateResolver) {
+            if (false === $templateResolver) {
+                $this->engine->unsetResolveTemplatePath();
 
-            return true;
+            } else {
+                $templateResolver->setStore($this->store);
+
+                $this->engine->setResolveTemplatePath(
+                    new TemplateResolverResolveTemplatePath($templateResolver)
+                );
+            }
         }
 
-        return false;
-    }
+        $this->templateResolver = $templateResolver;
 
-    public function functionGet($name) : LeagueFunc
-    {
-        return $this->engine->getFunction($name);
-    }
-
-    /**
-     * @return static
-     */
-    public function functionRegister($name, $callback)
-    {
-        $this->engine->registerFunction($name, $callback);
-
-        return $this;
-    }
-
-    /**
-     * @return static
-     */
-    public function functionDrop($name)
-    {
-        $this->engine->dropFunction($name);
-
-        return $this;
-    }
-
-
-    /**
-     * @return static
-     */
-    public function extensionLoadAll(array $extensions = [])
-    {
-        $this->engine->loadExtensions($extensions);
-
-        return $this;
-    }
-
-    /**
-     * @return static
-     */
-    public function extensionLoad(LeagueExtensionInterface $extension)
-    {
-        $this->engine->loadExtension($extension);
-
-        return $this;
+        return $last;
     }
 
 
@@ -252,9 +347,9 @@ class FrontFacade implements FrontInterface
         return $this->engine->exists($name);
     }
 
-    public function templatePath($name) : string
+    public function templateName($name) : string
     {
-        return $this->engine->make($name)->path();
+        return $this->engine->make($name)->name();
     }
 
     public function templateDir($name) : string
@@ -262,9 +357,70 @@ class FrontFacade implements FrontInterface
         return $this->engine->make($name)->dir();
     }
 
-    public function templateName($name) : string
+    public function templateFolder($name) : Folder
     {
-        return $this->engine->make($name)->name();
+        return $this->engine->make($name)->folder();
+    }
+
+    public function templatePath($name) : string
+    {
+        return $this->engine->make($name)->path();
+    }
+
+    public function templateRelpath($name) : string
+    {
+        return $this->engine->make($name)->relpath();
+    }
+
+
+    /**
+     * @param string|false|null $langCurrent
+     */
+    public function templateLangCurrent($langCurrent) : ?string
+    {
+        $last = $this->store->templateLangCurrent;
+
+        if (null !== $langCurrent) {
+            if (false === $langCurrent) {
+                $this->store->templateLangCurrent = null;
+
+            } else {
+                if ('' === $langCurrent) {
+                    throw new LogicException(
+                        [ 'The `langCurrent` should be non-empty string', $langCurrent ]
+                    );
+                }
+
+                $this->store->templateLangCurrent = $langCurrent;
+            }
+        }
+
+        return $last;
+    }
+
+    /**
+     * @param string|false|null $langDefault
+     */
+    public function templateLangDefault($langDefault) : ?string
+    {
+        $last = $this->store->templateLangDefault;
+
+        if (null !== $langDefault) {
+            if (false === $langDefault) {
+                $this->store->templateLangDefault = null;
+
+            } else {
+                if ('' === $langDefault) {
+                    throw new LogicException(
+                        [ 'The `langDefault` should be non-empty string', $langDefault ]
+                    );
+                }
+
+                $this->store->templateLangDefault = $langDefault;
+            }
+        }
+
+        return $last;
     }
 
 
@@ -283,37 +439,36 @@ class FrontFacade implements FrontInterface
     }
 
 
-    public function langCurrentSet(?string $langCurrent) : ?string
+    /**
+     * @param callable|false|null $fnTemplateGetItem
+     */
+    public function fnTemplateGetItem($fnTemplateGetItem = null) : ?callable
     {
-        $last = $this->store->langCurrent;
-
-        if (null !== $langCurrent) {
-            if ('' === $langCurrent) {
-                throw new LogicException(
-                    [ 'The `langCurrent` should be non-empty string', $langCurrent ]
-                );
-            }
-
-            $this->store->langCurrent = $langCurrent;
-        }
-
-        return $last;
+        return $this->engine->fnTemplateGetItem($fnTemplateGetItem);
     }
 
-    public function langDefaultSet(?string $langDefault) : ?string
+    /**
+     * @param callable|false|null $fnTemplateCatchError
+     */
+    public function fnTemplateCatchError($fnTemplateCatchError = null) : ?callable
     {
-        $last = $this->store->langDefault;
+        return $this->engine->fnTemplateCatchError($fnTemplateCatchError);
+    }
 
-        if (null !== $langDefault) {
-            if ('' === $langDefault) {
-                throw new LogicException(
-                    [ 'The `langDefault` should be non-empty string', $langDefault ]
-                );
-            }
 
-            $this->store->langDefault = $langDefault;
-        }
+    /**
+     * @param FrontAssetLocalSrcResolverInterface|false|null $assetLocalSrcResolver
+     */
+    public function assetLocalSrcResolver($assetLocalSrcResolver = null) : ?FrontAssetLocalSrcResolverInterface
+    {
+        return $this->assetManager->localSrcResolver($assetLocalSrcResolver);
+    }
 
-        return $last;
+    /**
+     * @param FrontAssetRemoteSrcResolverInterface|false|null $assetRemoteSrcResolver
+     */
+    public function assetRemoteSrcResolver($assetRemoteSrcResolver = null) : ?FrontAssetRemoteSrcResolverInterface
+    {
+        return $this->assetManager->remoteSrcResolver($assetRemoteSrcResolver);
     }
 }

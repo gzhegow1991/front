@@ -3,42 +3,46 @@
 namespace Gzhegow\Front\Core\TagManager;
 
 use Gzhegow\Lib\Lib;
+use Gzhegow\Front\FrontInterface;
+use Gzhegow\Front\Core\Store\FrontStore;
 
 
 class FrontTagManager implements FrontTagManagerInterface
 {
     /**
-     * @var FrontTagManagerConfig
+     * @var FrontStore
      */
-    protected $config;
+    protected $frontStore;
 
     /**
      * @var array<string, bool>
      */
-    protected $linkSeoList = [];
+    protected $linkSeoTimes = [];
 
 
-    public function __construct(
-        FrontTagManagerConfig $config
-    )
+    public function initialize(FrontInterface $front) : void
     {
-        $this->config = $config;
+        $this->frontStore = $front->getStore();
     }
 
 
     public function tag(string $tag, $content, ?array $attributes = null) : string
     {
-        $tagString = Lib::parseThrow()->string_not_empty($tag);
+        $theType = Lib::type();
+
+        $tagString = $theType->string_not_empty($tag)->orThrow();
 
         $lines = is_array($content)
             ? $content
             : ($content ? [ $content ] : []);
 
         $attributesArray = $attributes ?? [];
-        $attributesArray[ 'alt' ] = $attributesArray[ 'alt' ] ?? null;
-        $attributesArray[ 'title' ] = $attributesArray[ 'title' ] ?? $attributesArray[ 'alt' ] ?? null;
-        $attributesArray[ 'alt' ] = $this->attributeValueAltOrNull($attributesArray[ 'alt' ]) ?? false;
-        $attributesArray[ 'title' ] = $this->attributeValueTitleOrNull($attributesArray[ 'title' ]) ?? false;
+
+        $attributesArray[ 'alt' ] = $attributesArray[ 'alt' ] ?? '';
+        $attributesArray[ 'title' ] = $attributesArray[ 'title' ] ?? $attributesArray[ 'alt' ] ?? '';
+
+        $attributesArray[ 'alt' ] = ('' === $attributesArray[ 'alt' ]) ? false : $this->attrAlt($attributesArray[ 'alt' ]);
+        $attributesArray[ 'title' ] = ('' === $attributesArray[ 'title' ]) ? false : $this->attrTitle($attributesArray[ 'title' ]);
 
         $htmlContent = implode("\n", $lines);
         $htmlContent = trim($htmlContent);
@@ -50,6 +54,96 @@ class FrontTagManager implements FrontTagManagerInterface
             /****/ . $htmlContent
             . "</{$tagString}>";
     }
+
+    public function tagShort(string $tag, ?array $attributes = null) : string
+    {
+        $theType = Lib::type();
+
+        $tagString = $theType->string_not_empty($tag)->orThrow();
+
+        $attributesArray = $attributes ?? [];
+
+        $attributesArray[ 'alt' ] = $attributesArray[ 'alt' ] ?? '';
+        $attributesArray[ 'title' ] = $attributesArray[ 'title' ] ?? $attributesArray[ 'alt' ] ?? '';
+
+        $attributesArray[ 'alt' ] = ('' === $attributesArray[ 'alt' ]) ? false : $this->attrAlt($attributesArray[ 'alt' ]);
+        $attributesArray[ 'title' ] = ('' === $attributesArray[ 'title' ]) ? false : $this->attrTitle($attributesArray[ 'title' ]);
+
+        $htmlAttributes = $this->attributes($attributesArray);
+
+        return "<{$tagString} {$htmlAttributes} />";
+    }
+
+
+    /**
+     * @param string|string[] $content
+     * @param string|true     $url
+     */
+    public function tagAHref($content, $url, ?string $title = null, ?array $attributes = null) : string
+    {
+        $theType = Lib::type();
+
+        $uriString = $theType->uri($url)->orThrow();
+
+        $attributesArray = $attributes ?? [];
+        $attributesArray[ 'href' ] = $uriString;
+        $attributesArray[ 'title' ] = $title;
+
+        $html = $this->tag('a', $content, $attributesArray);
+
+        return $html;
+    }
+
+    /**
+     * @param string|string[] $content
+     * @param string|true     $url
+     */
+    public function tagAButton($content, $url, ?string $title = null, ?array $attributes = null) : string
+    {
+        $theType = Lib::type();
+
+        $uriString = $theType->uri($url)->orThrow();
+
+        $attributesArray = $attributes ?? [];
+        $attributesArray[ 'title' ] = $title;
+
+        $attributeTarget = $attributesArray[ 'target' ] ?? null;
+        $attributeOnclick = $attributeTarget === '_blank'
+            ? "window.open('{$uriString}');"
+            : "location.href='{$uriString}';";
+
+        unset($attributesArray[ 'target' ]);
+        $attributesArray[ 'onclick' ] = $attributeOnclick;
+
+        $html = $this->tag('button', $content, []
+            + [
+                'type'  => 'button',
+                'style' => 'display: inline-block; cursor: pointer;',
+            ]
+            + $attributesArray
+        );
+
+        return $html;
+    }
+
+    /**
+     * @param string|true $url
+     */
+    public function tagImg($url, ?string $alt = null, ?array $attributes = null) : string
+    {
+        $theType = Lib::type();
+
+        $uriString = $theType->uri($url)->orThrow();
+
+        $attributesArray = $attributes ?? [];
+        $attributesArray[ 'href' ] = $uriString;
+        $attributesArray[ 'alt' ] = $alt;
+
+        $html = $this->tagShort('img', $attributesArray);
+
+        return $html;
+    }
+
 
     public function attributes(?array $attributes = null) : string
     {
@@ -73,198 +167,157 @@ class FrontTagManager implements FrontTagManagerInterface
     }
 
 
-    public function attributeValueAlt($alt) : string
+    public function attrAlt($alt, ?string $separator = null) : string
     {
-        return $this->attributeValueAltOrNull($alt);
+        $separator = $separator ?? ' | ';
+
+        $theType = Lib::type();
+
+        $altString = $theType->string_not_empty($alt)->orThrow();
+
+        $websiteAppName = $this->frontStore->appNameShort;
+
+        if ($altString !== $websiteAppName) {
+            $altString = "{$altString}{$separator}{$websiteAppName}";
+        }
+
+        return $altString;
     }
 
-    public function attributeValueAltOrNull($alt) : ?string
+    public function attrAltOrNull($alt, ?string $separator = null) : ?string
     {
-        if (! is_string($alt)) {
+        $separator = $separator ?? ' | ';
+
+        $theType = Lib::type();
+
+        if (! $theType->string_not_empty($alt)->isOk([ &$altString ])) {
             return null;
         }
 
-        if ('' === $alt) {
-            return null;
+        $websiteAppName = $this->frontStore->appNameShort;
+
+        if ($altString !== $websiteAppName) {
+            $altString = "{$altString}{$separator}{$websiteAppName}";
         }
-
-        $websiteAppName = $this->config->appNameShort;
-
-        $altString = ($alt !== $websiteAppName)
-            ? ($alt . ' / ' . $websiteAppName)
-            : ($alt);
 
         return $altString;
     }
 
 
-    public function attributeValueTitle($title) : string
+    public function attrTitle($title, ?string $separator = null) : string
     {
-        return $this->attributeValueTitleOrNull($title);
+        $separator = $separator ?? ' | ';
+
+        $theType = Lib::type();
+
+        $titleString = $theType->string_not_empty($title)->orThrow();
+
+        $websiteAppName = $this->frontStore->appNameShort;
+
+        if ($titleString !== $websiteAppName) {
+            $titleString = "{$titleString}{$separator}{$websiteAppName}";
+        }
+
+        return $titleString;
     }
 
-    public function attributeValueTitleOrNull($title) : ?string
+    public function attrTitleOrNull($title, ?string $separator = null) : ?string
     {
-        if (! is_string($title)) {
+        $separator = $separator ?? ' | ';
+
+        $theType = Lib::type();
+
+        if (! $theType->string_not_empty($title)->isOk([ &$titleString ])) {
             return null;
         }
 
-        if (! strlen($title)) {
-            return null;
+        $websiteAppName = $this->frontStore->appNameShort;
+
+        if ($titleString !== $websiteAppName) {
+            $titleString = "{$titleString}{$separator}{$websiteAppName}";
         }
 
-        $websiteAppName = $this->config->appNameShort;
-
-        $title = ($title !== $websiteAppName)
-            ? ($title . ' / ' . $websiteAppName)
-            : ($title);
-
-        return $title;
+        return $titleString;
     }
 
-
-    public function linkSeo($content, $url = true, ?string $title = null, ?array $attributes = null) : string
-    {
-        $theParseThrow = Lib::parseThrow();
-        $theUrl = Lib::url();
-
-        $attributesArray = $attributes ?? [];
-
-        $linkString = $theParseThrow->link(
-            $url, null, null,
-            1,
-            [ &$parseUrlResult ]
-        );
-
-        $serverHttpHost = $_SERVER[ 'HTTP_HOST' ] ?? null;
-
-        $urlScheme = $parseUrlResult[ 'scheme' ] ?? null;
-        $urlHost = $parseUrlResult[ 'host' ] ?? null;
-        $urlFragment = $parseUrlResult[ 'fragment' ] ?? null;
-
-        $isCustomScheme = ! in_array($urlScheme, [ 'http', 'https' ]);
-        $isHostRemote = ($urlHost !== $serverHttpHost);
-        $hasFragment = strlen($urlFragment);
-
-        $urlString = $linkString;
-
-        if ($isCustomScheme || $isHostRemote) {
-            $attributesArray[ 'rel' ] = 'nofollow';
-        }
-
-        $isCurrentPage = false;
-        if (! ($isCustomScheme || $isHostRemote || $hasFragment)) {
-            $urlString = $theUrl->url($linkString);
-
-            $isCurrentPage = ($urlString === $theUrl->url_current());
-        }
-
-        $isSecondInstance = isset($this->linkSeoList[ $urlString ]);
-
-        if ($isSecondInstance) {
-            $isCurrentPage = $this->linkSeoList[ $urlString ];
-
-        } elseif ($isCurrentPage) {
-            $this->linkSeoList[ $urlString ] = $isCurrentPage;
-        }
-
-        $html = ($isSecondInstance || $isCurrentPage)
-            ? $this->linkClickableJavascript($content, $urlString, $title, $attributesArray)
-            : $this->linkClickableHref($content, $urlString, $title, $attributesArray);
-
-        return $html;
-    }
 
     public function linkHref($content, $url = true, ?string $title = null, ?array $attributes = null) : string
     {
-        $theParseThrow = Lib::parseThrow();
-        $theUrl = Lib::url();
-
-        $linkString = $theParseThrow->link(
-            $url, null, null,
-            1,
-            [ &$parseUrlResult ]
-        );
+        $theType = Lib::type();
 
         $attributesArray = $attributes ?? [];
 
+        $uriString = $theType->uri(
+            $url, null, null,
+            1, 1,
+            [ &$parseUrlResult ]
+        )->orThrow();
+
         $serverHttpHost = $_SERVER[ 'HTTP_HOST' ] ?? null;
 
-        $urlScheme = $parseUrlResult[ 'scheme' ] ?? null;
-        $urlHost = $parseUrlResult[ 'host' ] ?? null;
-        $urlFragment = $parseUrlResult[ 'fragment' ] ?? null;
+        $urlScheme = ('' === $parseUrlResult[ 'scheme' ]) ? null : $parseUrlResult[ 'scheme' ];
+        $urlHost = ('' === $parseUrlResult[ 'host' ]) ? null : $parseUrlResult[ 'host' ];
 
         $isCustomScheme = ! in_array($urlScheme, [ 'http', 'https' ]);
-        $isHostRemote = ($urlHost !== $serverHttpHost);
-        $hasFragment = strlen($urlFragment);
-
-        $urlString = $linkString;
+        $isHostRemote = ($serverHttpHost !== $urlHost);
 
         if ($isCustomScheme || $isHostRemote) {
             $attributesArray[ 'rel' ] = 'nofollow';
         }
 
-        if (! ($isCustomScheme || $isHostRemote || $hasFragment)) {
-            $urlString = $theUrl->url($linkString);
-        }
-
-        $html = $this->linkClickableHref($content, $urlString, $title, $attributesArray);
+        $html = $this->tagAHref($content, $uriString, $title, $attributesArray);
 
         return $html;
     }
 
-
-    /**
-     * @param string|string[] $content
-     * @param string          $url
-     * @param string|null     $title
-     * @param array|null      $attributes
-     *
-     * @return string
-     */
-    protected function linkClickableJavascript($content, $url = true, ?string $title = null, ?array $attributes = null) : string
+    public function linkSeo($content, $url = true, ?string $title = null, ?array $attributes = null) : string
     {
+        $theType = Lib::type();
         $theUrl = Lib::url();
 
-        $urlString = $theUrl->url($url);
-
         $attributesArray = $attributes ?? [];
-        $attributesArray[ 'title' ] = $title;
 
-        $attributeTarget = $attributesArray[ 'target' ] ?? null;
-        $attributeOnclick = $attributeTarget === '_blank'
-            ? "window.open('{$urlString}');"
-            : "location.href='{$urlString}';";
+        $uriString = $theType->uri(
+            $url, null, null,
+            1, 1,
+            [ &$parseUrlResult ]
+        )->orThrow();
 
-        unset($attributesArray[ 'target' ]);
-        $attributesArray[ 'onclick' ] = $attributeOnclick;
+        $serverHttpHost = $_SERVER[ 'HTTP_HOST' ] ?? null;
 
-        $html = $this->tag('button', $content, []
-            + [
-                'type'  => 'button',
-                'style' => 'display: inline-block; cursor: pointer;',
-            ]
-            + $attributesArray
-        );
+        $urlScheme = ('' === $parseUrlResult[ 'scheme' ]) ? null : $parseUrlResult[ 'scheme' ];
+        $urlHost = ('' === $parseUrlResult[ 'host' ]) ? null : $parseUrlResult[ 'host' ];
+        $urlFragment = ('' === $parseUrlResult[ 'fragment' ]) ? null : $parseUrlResult[ 'fragment' ];
 
-        return $html;
-    }
+        $hasFragment = strlen($urlFragment);
+        $isCustomScheme = ! in_array($urlScheme, [ 'http', 'https' ]);
+        $isHostRemote = ($serverHttpHost !== $urlHost);
 
-    /**
-     * @param string|string[] $content
-     * @param string          $url
-     * @param string|null     $title
-     * @param array|null      $attributes
-     *
-     * @return string
-     */
-    protected function linkClickableHref($content, string $url, ?string $title = null, ?array $attributes = null) : string
-    {
-        $attributesArray = $attributes ?? [];
-        $attributesArray[ 'href' ] = $url;
-        $attributesArray[ 'title' ] = $title;
+        if ($isCustomScheme || $isHostRemote || $hasFragment) {
+            $isCurrentPage = false;
 
-        $html = $this->tag('a', $content, $attributesArray);
+        } else {
+            $urlCurrentString = $theUrl->url_current();
+
+            $isCurrentPage = ($urlCurrentString === $uriString);
+        }
+
+        if ($isCustomScheme || $isHostRemote) {
+            $attributesArray[ 'rel' ] = 'nofollow';
+
+            $isSecondTime = false;
+
+        } else {
+            $isSecondTime = isset($this->linkSeoTimes[ $uriString ]);
+
+            if (! $isSecondTime) {
+                $this->linkSeoTimes[ $uriString ] = true;
+            }
+        }
+
+        $html = ($isSecondTime || $isCurrentPage)
+            ? $this->tagAButton($content, $uriString, $title, $attributesArray)
+            : $this->tagAHref($content, $uriString, $title, $attributesArray);
 
         return $html;
     }

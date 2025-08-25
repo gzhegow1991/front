@@ -2,51 +2,61 @@
 
 namespace Gzhegow\Front;
 
-use Gzhegow\Front\Store\FrontStore;
-use League\Plates\Template\Func as LeagueFunc;
-use Gzhegow\Front\Core\Resolver\FrontResolverInterface;
-use League\Plates\Template\Folders as LeagueFolders;
-use League\Plates\Extension\ExtensionInterface as LeagueExtensionInterface;
+use Gzhegow\Front\Core\Struct\Remote;
+use Gzhegow\Front\Core\Struct\Folder;
+use Gzhegow\Front\Core\Store\FrontStore;
+use Gzhegow\Front\Core\TemplateResolver\FrontTemplateResolverInterface;
+use Gzhegow\Front\Package\League\Plates\EngineInterface as PlatesEngineInterface;
+use Gzhegow\Front\Core\AssetManager\LocalSrcResolver\FrontAssetLocalSrcResolverInterface;
+use Gzhegow\Front\Core\AssetManager\RemoteSrcResolver\FrontAssetRemoteSrcResolverInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface as PlatesTemplateInterface;
 
 
 interface FrontInterface
 {
+    public function getEngine() : PlatesEngineInterface;
+
+
     public function getStore() : FrontStore;
-
-
-    public function resolverGet() : ?FrontResolverInterface;
-
-    public function resolverSet(?FrontResolverInterface $resolver) : ?FrontResolverInterface;
 
 
     public function directoryGet() : string;
 
-    /**
-     * @return static
-     */
-    public function directorySet($directory);
-
-
     public function fileExtensionGet() : string;
 
-    /**
-     * @return static
-     */
-    public function fileExtensionSet($fileExtension);
+    public function publicPathGet() : ?string;
 
-
-    public function folderGetAll() : LeagueFolders;
 
     /**
-     * @return static
+     * @return Folder[]
      */
-    public function folderAdd($name, $directory, $fallback = false);
+    public function getFolders() : array;
+
+    public function getFolder(int $id) : Folder;
+
+    public function getFolderByAlias(string $alias) : Folder;
+
+    public function getFolderByDirectory(string $directory) : Folder;
 
     /**
-     * @return static
+     * @param Folder|array $folder
      */
-    public function folderRemove($name);
+    public function folderAdd($folder) : int;
+
+
+    /**
+     * @return Remote[]
+     */
+    public function getRemotes() : array;
+
+    public function getRemote(int $id) : Remote;
+
+    public function getRemoteByAlias(string $alias) : Remote;
+
+    /**
+     * @param Remote|array $remote
+     */
+    public function remoteAdd($remote) : int;
 
 
     public function dataGet($template = null);
@@ -57,40 +67,34 @@ interface FrontInterface
     public function dataAdd(array $data, $templates = null);
 
 
-    public function functionExists($name, ?LeagueFunc &$func = null) : bool;
-
-    public function functionGet($name) : LeagueFunc;
-
-
     /**
-     * @return static
+     * @param FrontTemplateResolverInterface|false|null $templateResolver
      */
-    public function functionRegister($name, $callback);
-
-    /**
-     * @return static
-     */
-    public function functionDrop($name);
-
-
-    /**
-     * @return static
-     */
-    public function extensionLoadAll(array $extensions = []);
-
-    /**
-     * @return static
-     */
-    public function extensionLoad(LeagueExtensionInterface $extension);
+    public function templateResolver($templateResolver = null) : ?FrontTemplateResolverInterface;
 
 
     public function templateExists($name) : bool;
 
-    public function templatePath($name) : string;
+    public function templateName($name) : string;
 
     public function templateDir($name) : string;
 
-    public function templateName($name) : string;
+    public function templateFolder($name) : Folder;
+
+    public function templatePath($name) : string;
+
+    public function templateRelpath($name) : string;
+
+
+    /**
+     * @param string|false|null $langCurrent
+     */
+    public function templateLangCurrent($langCurrent) : ?string;
+
+    /**
+     * @param string|false|null $langDefault
+     */
+    public function templateLangDefault($langDefault) : ?string;
 
 
     public function make($name, array $data = []) : PlatesTemplateInterface;
@@ -98,7 +102,24 @@ interface FrontInterface
     public function render($name, array $data = []) : string;
 
 
-    public function langCurrentSet(?string $langCurrent) : ?string;
+    /**
+     * @param callable|false|null $fnTemplateGetItem
+     */
+    public function fnTemplateGetItem($fnTemplateGetItem = null) : ?callable;
 
-    public function langDefaultSet(?string $langDefault) : ?string;
+    /**
+     * @param callable|false|null $fnTemplateCatchError
+     */
+    public function fnTemplateCatchError($fnTemplateCatchError = null) : ?callable;
+
+
+    /**
+     * @param FrontAssetLocalSrcResolverInterface|false|null $assetLocalSrcResolver
+     */
+    public function assetLocalSrcResolver($assetLocalSrcResolver = null) : ?FrontAssetLocalSrcResolverInterface;
+
+    /**
+     * @param FrontAssetRemoteSrcResolverInterface|false|null $assetRemoteSrcResolver
+     */
+    public function assetRemoteSrcResolver($assetRemoteSrcResolver = null) : ?FrontAssetRemoteSrcResolverInterface;
 }

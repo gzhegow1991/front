@@ -2,14 +2,17 @@
 
 namespace Gzhegow\Front\Package\League\Plates;
 
-use Gzhegow\Front\Store\FrontStore;
+use Gzhegow\Front\Core\Store\FrontStore;
 use League\Plates\Engine as LeagueEngine;
 use Gzhegow\Front\FrontFactoryInterface;
 use Gzhegow\Front\Exception\RuntimeException;
 use League\Plates\Template\ResolveTemplatePath;
 use Gzhegow\Front\Core\TagManager\FrontTagManagerInterface;
+use Gzhegow\Front\Core\AssetManager\FrontAssetManagerInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface;
+use Gzhegow\Front\Core\TemplateResolver\FrontTemplateResolverInterface;
 use League\Plates\Template\ResolveTemplatePath\NameAndFolderResolveTemplatePath;
+use Gzhegow\Front\Package\League\Plates\Template\ResolveTemplatePath\TemplateResolverResolveTemplatePath;
 
 
 class Engine extends LeagueEngine implements EngineInterface
@@ -18,10 +21,16 @@ class Engine extends LeagueEngine implements EngineInterface
      * @var FrontFactoryInterface
      */
     protected $factory;
+
+    /**
+     * @var FrontAssetManagerInterface
+     */
+    protected $assetManager;
     /**
      * @var FrontTagManagerInterface
      */
     protected $tagManager;
+
     /**
      * @var FrontStore
      */
@@ -32,10 +41,20 @@ class Engine extends LeagueEngine implements EngineInterface
      */
     protected $resolveTemplatePath;
 
+    /**
+     * @var callable|null
+     */
+    protected $fnTemplateGetItem;
+    /**
+     * @var callable|null
+     */
+    protected $fnTemplateCatchError;
+
 
     public function __construct(
         FrontFactoryInterface $factory,
         //
+        FrontAssetManagerInterface $assetManager,
         FrontTagManagerInterface $tagManager,
         //
         FrontStore $store,
@@ -47,6 +66,7 @@ class Engine extends LeagueEngine implements EngineInterface
 
         $this->factory = $factory;
 
+        $this->assetManager = $assetManager;
         $this->tagManager = $tagManager;
 
         $this->store = $store;
@@ -86,6 +106,7 @@ class Engine extends LeagueEngine implements EngineInterface
     public function make($name, array $data = []) : TemplateInterface
     {
         $template = $this->factory->newPlatesTemplate(
+            $this->assetManager,
             $this->tagManager,
             //
             $this->store,
@@ -112,5 +133,42 @@ class Engine extends LeagueEngine implements EngineInterface
         }
 
         return $html;
+    }
+
+
+    /**
+     * @param callable|false|null $fnTemplateGetItem
+     */
+    public function fnTemplateGetItem($fnTemplateGetItem = null) : ?callable
+    {
+        $last = $this->fnTemplateGetItem;
+
+        if (null !== $fnTemplateGetItem) {
+            if (false === $fnTemplateGetItem) {
+                $fnTemplateGetItem = null;
+            }
+        }
+
+        $this->fnTemplateGetItem = $fnTemplateGetItem;
+
+        return $last;
+    }
+
+    /**
+     * @param callable|false|null $fnTemplateCatchError
+     */
+    public function fnTemplateCatchError($fnTemplateCatchError = null) : ?callable
+    {
+        $last = $this->fnTemplateCatchError;
+
+        if (null !== $fnTemplateCatchError) {
+            if (false === $fnTemplateCatchError) {
+                $fnTemplateCatchError = null;
+            }
+        }
+
+        $this->fnTemplateCatchError = $fnTemplateCatchError;
+
+        return $last;
     }
 }

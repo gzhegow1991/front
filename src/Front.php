@@ -2,175 +2,191 @@
 
 namespace Gzhegow\Front;
 
-use Gzhegow\Front\Store\FrontStore;
-use League\Plates\Template\Func as LeagueFunc;
-use League\Plates\Template\Folders as LeagueFolders;
-use League\Plates\Extension\ExtensionInterface as LeagueExtensionInterface;
-use League\Plates\Template\ResolveTemplatePath as LeagueResolveTemplatePath;
+use Gzhegow\Front\Core\Struct\Folder;
+use Gzhegow\Front\Core\Struct\Remote;
+use Gzhegow\Front\Core\Store\FrontStore;
+use Gzhegow\Front\Core\TemplateResolver\FrontTemplateResolverInterface;
+use Gzhegow\Front\Package\League\Plates\EngineInterface as PlatesEngineInterface;
+use Gzhegow\Front\Core\AssetManager\LocalSrcResolver\FrontAssetLocalSrcResolverInterface;
+use Gzhegow\Front\Core\AssetManager\RemoteSrcResolver\FrontAssetRemoteSrcResolverInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface as PlatesTemplateInterface;
 
 
 class Front
 {
-    public function getStore() : FrontStore
+    const ROOT_FOLDER_ALIAS = '@root';
+
+
+    public static function getEngine() : PlatesEngineInterface
+    {
+        return static::$facade->getEngine();
+    }
+
+
+    public static function getStore() : FrontStore
     {
         return static::$facade->getStore();
     }
 
 
-    public function resolverGet() : LeagueResolveTemplatePath
-    {
-        return static::$facade->resolverGet();
-    }
-
-    /**
-     * @return FrontInterface
-     */
-    public function resolverSet(LeagueResolveTemplatePath $resolver)
-    {
-        return static::$facade->resolverSet($resolver);
-    }
-
-
-    public function directoryGet() : string
+    public static function directoryGet() : string
     {
         return static::$facade->directoryGet();
     }
 
-    /**
-     * @return FrontInterface
-     */
-    public function directorySet($directory)
-    {
-        return static::$facade->directorySet($directory);
-    }
-
-
-    public function fileExtensionGet() : string
+    public static function fileExtensionGet() : string
     {
         return static::$facade->fileExtensionGet();
     }
 
-    /**
-     * @return FrontInterface
-     */
-    public function fileExtensionSet($fileExtension)
+    public static function publicPathGet() : ?string
     {
-        return static::$facade->fileExtensionSet($fileExtension);
+        return static::$facade->publicPathGet();
     }
 
 
-    public function folderGetAll() : LeagueFolders
+    public static function getFolders() : array
     {
-        return static::$facade->folderGetAll();
+        return static::$facade->getFolders();
     }
 
-    /**
-     * @return FrontInterface
-     */
-    public function folderAdd($name, $directory, $fallback = false)
+    public static function getFolder(int $id) : Folder
     {
-        return static::$facade->folderAdd($name, $directory, $fallback);
+        return static::$facade->getFolder($id);
     }
 
-    /**
-     * @return FrontInterface
-     */
-    public function folderRemove($name)
+    public static function getFolderByAlias(string $alias) : Folder
     {
-        return static::$facade->folderRemove($name);
+        return static::$facade->getFolderByAlias($alias);
+    }
+
+    public static function getFolderByDirectory(string $directory) : Folder
+    {
+        return static::$facade->getFolderByDirectory($directory);
+    }
+
+    public static function folderAdd($folder) : int
+    {
+        return static::$facade->folderAdd($folder);
     }
 
 
-    public function dataGet($template = null)
+    public static function getRemotes() : array
+    {
+        return static::$facade->getRemotes();
+    }
+
+    public static function getRemote(int $id) : Remote
+    {
+        return static::$facade->getRemote($id);
+    }
+
+    public static function getRemoteByAlias(string $alias) : Remote
+    {
+        return static::$facade->getRemoteByAlias($alias);
+    }
+
+    public static function remoteAdd($remote) : int
+    {
+        return static::$facade->remoteAdd($remote);
+    }
+
+
+    public static function dataGet($template = null)
     {
         return static::$facade->dataGet($template);
     }
 
-    /**
-     * @return FrontInterface
-     */
-    public function dataAdd(array $data, $templates = null)
+    public static function dataAdd(array $data, $templates = null)
     {
         return static::$facade->dataAdd($data, $templates);
     }
 
 
-    public function functionExists($name, ?LeagueFunc &$func = null) : bool
+    public static function templateResolver($templateResolver) : ?FrontTemplateResolverInterface
     {
-        return static::$facade->functionExists($name, $func);
-    }
-
-    public function functionGet($name) : LeagueFunc
-    {
-        return static::$facade->functionGet($name);
+        return static::$facade->templateResolver($templateResolver);
     }
 
 
-    /**
-     * @return FrontInterface
-     */
-    public function functionRegister($name, $callback)
-    {
-        return static::$facade->functionRegister($name, $callback);
-    }
-
-    /**
-     * @return FrontInterface
-     */
-    public function functionDrop($name)
-    {
-        return static::$facade->functionDrop($name);
-    }
-
-
-    /**
-     * @return FrontInterface
-     */
-    public function extensionLoadAll(array $extensions = [])
-    {
-        return static::$facade->extensionLoadAll($extensions);
-    }
-
-    /**
-     * @return FrontInterface
-     */
-    public function extensionLoad(LeagueExtensionInterface $extension)
-    {
-        return static::$facade->extensionLoad($extension);
-    }
-
-
-    public function templateExists($name) : bool
+    public static function templateExists($name) : bool
     {
         return static::$facade->templateExists($name);
     }
 
-    public function templatePath($name) : string
+    public static function templateName($name) : string
+    {
+        return static::$facade->templateName($name);
+    }
+
+    public static function templateDir($name) : string
+    {
+        return static::$facade->templateDir($name);
+    }
+
+    public static function templateFolder($name) : Folder
+    {
+        return static::$facade->templateFolder($name);
+    }
+
+    public static function templatePath($name) : string
     {
         return static::$facade->templatePath($name);
     }
 
+    public static function templateRelpath($name) : string
+    {
+        return static::$facade->templateRelpath($name);
+    }
 
-    public function make($name, array $data = []) : PlatesTemplateInterface
+
+    public static function templateLangCurrentSet($langCurrent) : ?string
+    {
+        return static::$facade->templateLangCurrent($langCurrent);
+    }
+
+    public static function templateLangDefaultSet($langDefault) : ?string
+    {
+        return static::$facade->templateLangDefault($langDefault);
+    }
+
+
+    public static function make($name, array $data = []) : PlatesTemplateInterface
     {
         return static::$facade->make($name, $data);
     }
 
-    public function render($name, array $data = []) : string
+    public static function render($name, array $data = []) : string
     {
-        return static::$facade->make($name, $data);
+        return static::$facade->render($name, $data);
     }
 
 
-    public function langCurrentSet(?string $langCurrent) : ?string
+    /**
+     * @param callable|false|null $fnTemplateGetItem
+     */
+    public static function fnTemplateGetItem($fnTemplateGetItem = null) : ?callable
     {
-        return static::$facade->langCurrentSet($langCurrent);
+        return static::$facade->fnTemplateGetItem($fnTemplateGetItem);
     }
 
-    public function langDefaultSet(?string $langDefault) : ?string
+    /**
+     * @param callable|false|null $fnTemplateCatchError
+     */
+    public static function fnTemplateCatchError($fnTemplateCatchError = null) : ?callable
     {
-        return static::$facade->langDefaultSet($langDefault);
+        return static::$facade->fnTemplateCatchError($fnTemplateCatchError);
+    }
+
+
+    public static function assetLocalSrcResolver($assetLocalSrcResolver) : ?FrontAssetLocalSrcResolverInterface
+    {
+        return static::$facade->assetLocalSrcResolver($assetLocalSrcResolver);
+    }
+
+    public static function assetRemoteSrcResolver($assetRemoteSrcResolver) : ?FrontAssetRemoteSrcResolverInterface
+    {
+        return static::$facade->assetRemoteSrcResolver($assetRemoteSrcResolver);
     }
 
 

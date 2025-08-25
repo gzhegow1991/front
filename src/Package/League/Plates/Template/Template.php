@@ -3,29 +3,39 @@
 namespace Gzhegow\Front\Package\League\Plates\Template;
 
 use Gzhegow\Lib\Lib;
-use Gzhegow\Front\Store\FrontStore;
+use Gzhegow\Front\Front;
+use Gzhegow\Front\Core\Store\FrontStore;
+use Gzhegow\Front\Core\Struct\Folder;
+use Gzhegow\Front\Core\Struct\Remote;
 use Gzhegow\Front\Exception\RuntimeException;
 use Gzhegow\Front\Package\League\Plates\Engine;
 use League\Plates\Template\Template as LeagueTemplate;
 use Gzhegow\Front\Core\TagManager\FrontTagManagerInterface;
+use Gzhegow\Front\Core\AssetManager\FrontAssetManagerInterface;
+use Gzhegow\Front\Package\League\Plates\EngineInterface as PlatesEngineInterface;
 
 
 class Template extends LeagueTemplate implements TemplateInterface
 {
     /**
+     * @var FrontAssetManagerInterface
+     */
+    protected $frontAssetManager;
+    /**
      * @var FrontTagManagerInterface
      */
-    protected $tagManager;
+    protected $frontTagManager;
 
     /**
      * @var FrontStore
      */
-    protected $store;
+    protected $frontStore;
 
     /**
      * @var Engine
      */
     protected $engine;
+
 
     /**
      * @var string
@@ -34,28 +44,76 @@ class Template extends LeagueTemplate implements TemplateInterface
 
 
     public function __construct(
+        FrontAssetManagerInterface $assetManager,
         FrontTagManagerInterface $tagManager,
         //
         FrontStore $store,
         //
-        Engine $engine,
+        PlatesEngineInterface $engine,
         //
         $name
     )
     {
-        $this->tagManager = $tagManager;
+        $this->frontAssetManager = $assetManager;
+        $this->frontTagManager = $tagManager;
 
-        $this->store = $store;
+        $this->frontStore = $store;
 
         parent::__construct($engine, $name);
     }
 
 
-    /**
-     * @see parent::path()
-     */
+    public function name() : string
+    {
+        return $this->name->getName();
+    }
+
+    public function dir() : string
+    {
+        $file = $this->path();
+
+        return realpath(dirname($file));
+    }
+
+    public function folder() : Folder
+    {
+        $directoryRealpath = $this->dir();
+
+        $match = [];
+        foreach ( $this->frontStore->folders as $folder ) {
+            if (! $folder->hasPublicPath()) {
+                continue;
+            }
+
+            $folderDirectoryRealpath = $folder->getDirectory();
+
+            if (0 === strpos($directoryRealpath, $folderDirectoryRealpath)) {
+                $match[ $folderDirectoryRealpath ] = $folder;
+            }
+        }
+
+        if ([] === $match) {
+            throw new RuntimeException(
+                [ 'The `directory` is outside of all defined `folders`', $this ]
+            );
+        }
+
+        uksort(
+            $match,
+            static function ($a, $b) {
+                return strlen($a) - strlen($b);
+            }
+        );
+
+        $folder = end($match);
+
+        return $folder;
+    }
+
     public function path() : string
     {
+        /** @see parent::path() */
+
         if (null !== $this->pathResolved) {
             return $this->pathResolved;
         }
@@ -72,27 +130,19 @@ class Template extends LeagueTemplate implements TemplateInterface
             throw new RuntimeException($e);
         }
 
-        return $this->pathResolved = $pathResolved;
-    }
+        $fileRealpath = realpath($pathResolved);
 
-    public function dir() : string
-    {
-        return dirname($this->path());
-    }
-
-    public function name() : string
-    {
-        return $this->name->getName();
+        return $this->pathResolved = $fileRealpath;
     }
 
     public function relpath() : string
     {
         $theFs = Lib::php();
 
-        return $theFs->path_relative(
-            $this->path(),
-            $this->engine->getDirectory()
-        );
+        $file = $this->path();
+        $directory = $this->engine->getDirectory();
+
+        return $theFs->path_relative($file, $directory);
     }
 
 
@@ -105,42 +155,23 @@ class Template extends LeagueTemplate implements TemplateInterface
      */
     public function get(string $name, ?string $classT = null)
     {
-        if (null !== $this->store->fnTemplateGet) {
-            return call_user_func_array(
-                $this->store->fnTemplateGet,
-                [ $name, $this ]
+        $fnGetItem = $this->engine->fnTemplateGetItem();
+
+        if (null === $fnGetItem) {
+            $theType = Lib::type();
+
+            $item = $theType->key_exists($name, $this->data)->orThrow();
+
+        } else {
+            $item = call_user_func_array(
+                $fnGetItem,
+                [ $name, $classT, $this ]
             );
         }
 
-        $theType = Lib::type();
-
-        return $theType->key_exists($name, $this->data)->orThrow();
+        return $item;
     }
 
-
-    /**
-     * @see parent::fetch()
-     */
-    public function fetch($name, ?array $data = null) : string
-    {
-        $dataTotal = $data ?? [];
-        $dataTotal = $dataTotal + $this->data;
-
-        $template = $this->engine->make($name, $dataTotal);
-        $template->sections = $this->sections;
-
-        try {
-            $html = $template->render();
-        }
-        catch ( \RuntimeException $e ) {
-            throw $e;
-        }
-        catch ( \Throwable $e ) {
-            throw new RuntimeException($e);
-        }
-
-        return $html;
-    }
 
     /**
      * @see parent::render()
@@ -166,11 +197,13 @@ class Template extends LeagueTemplate implements TemplateInterface
         catch ( \Throwable $e ) {
             $content = ob_get_clean();
 
-            if (null !== $this->store->fnTemplateCatch) {
+            $fnCatchError = $this->engine->fnTemplateCatchError();
+
+            if (null !== $fnCatchError) {
 
                 try {
                     $content = call_user_func_array(
-                        $this->store->fnTemplateCatch,
+                        $fnCatchError,
                         [ $e, $content, $this ]
                     );
                 }
@@ -196,7 +229,7 @@ class Template extends LeagueTemplate implements TemplateInterface
             }
         }
 
-        if ($this->store->isDebug) {
+        if ($this->frontStore->isDebug) {
             $relpath = $this->relpath();
 
             $lines = array_merge(
@@ -229,6 +262,30 @@ class Template extends LeagueTemplate implements TemplateInterface
         $this->data = $dataBefore;
 
         return $content;
+    }
+
+    /**
+     * @see parent::fetch()
+     */
+    public function fetch($name, ?array $data = null) : string
+    {
+        $dataTotal = $data ?? [];
+        $dataTotal = $dataTotal + $this->data;
+
+        $template = $this->engine->make($name, $dataTotal);
+        $template->sections = $this->sections;
+
+        try {
+            $html = $template->render();
+        }
+        catch ( \RuntimeException $e ) {
+            throw $e;
+        }
+        catch ( \Throwable $e ) {
+            throw new RuntimeException($e);
+        }
+
+        return $html;
     }
 
 
@@ -273,63 +330,98 @@ class Template extends LeagueTemplate implements TemplateInterface
     }
 
 
+    public function getAssetManager() : FrontAssetManagerInterface
+    {
+        return $this->frontAssetManager;
+    }
+
+    public function assetLocalSrc(
+        string $src,
+        ?Folder $folderRoot = null,
+        ?Folder $folderCurrent = null,
+        ?string $directoryCurrent = null
+    ) : string
+    {
+        $folderRoot = $folderRoot ?? $this->frontStore->foldersByAlias[ Front::ROOT_FOLDER_ALIAS ] ?? null;
+        $folderCurrent = $folderCurrent ?? $this->folder();
+        $directoryCurrent = $directoryCurrent ?? $this->dir();
+
+        return $this->frontAssetManager->localSrc(
+            $src,
+            $folderRoot,
+            $folderCurrent, $directoryCurrent
+        );
+    }
+
+    public function assetRemoteSrc(
+        string $src,
+        ?Remote $remoteCurrent = null
+    ) : string
+    {
+        return $this->frontAssetManager->remoteSrc(
+            $src,
+            $remoteCurrent
+        );
+    }
+
+
     public function getTagManager() : FrontTagManagerInterface
     {
-        return $this->tagManager;
+        return $this->frontTagManager;
     }
 
     public function tag(string $tag, $content, ?array $attributes = null) : string
     {
-        $html = $this->tagManager->tag($tag, $content, $attributes);
+        $html = $this->frontTagManager->tag($tag, $content, $attributes);
 
         return $html;
     }
 
     public function tagAttributes(?array $attributes = null) : string
     {
-        $html = $this->tagManager->attributes($attributes);
+        $html = $this->frontTagManager->attributes($attributes);
 
         return $html;
     }
 
-    public function tagAttributeValueAlt($alt) : string
+    public function tagAttrAlt($alt) : string
     {
-        $html = $this->tagManager->attributeValueAlt($alt);
+        $html = $this->frontTagManager->attrAlt($alt);
 
         return $html;
     }
 
-    public function tagAttributeValueAltOrNull($alt) : ?string
+    public function tagAttrAltOrNull($alt) : ?string
     {
-        $html = $this->tagManager->attributeValueAltOrNull($alt);
+        $html = $this->frontTagManager->attrAltOrNull($alt);
 
         return $html;
     }
 
-    public function tagAttributeValueTitle($title) : string
+    public function tagAttrTitle($title) : string
     {
-        $html = $this->tagManager->attributeValueTitle($title);
+        $html = $this->frontTagManager->attrTitle($title);
 
         return $html;
     }
 
-    public function tagAttributeValueTitleOrNull($title) : ?string
+    public function tagAttrTitleOrNull($title) : ?string
     {
-        $html = $this->tagManager->attributeValueTitleOrNull($title);
-
-        return $html;
-    }
-
-    public function tagLinkSeo($content, ?string $url, ?string $title = null, ?array $attributes = null) : string
-    {
-        $html = $this->tagManager->linkSeo($content, $url, $title, $attributes);
+        $html = $this->frontTagManager->attrTitleOrNull($title);
 
         return $html;
     }
 
     public function tagLinkHref($content, ?string $url, ?string $title = null, ?array $attributes = null) : string
     {
-        $html = $this->tagManager->linkHref($content, $url, $title, $attributes);
+        $html = $this->frontTagManager->linkHref($content, $url, $title, $attributes);
+
+        return $html;
+    }
+
+    public function tagLinkSeo($content, ?string $url, ?string $title = null, ?array $attributes = null) : string
+    {
+        $html = $this->frontTagManager->linkSeo($content, $url, $title, $attributes);
 
         return $html;
     }

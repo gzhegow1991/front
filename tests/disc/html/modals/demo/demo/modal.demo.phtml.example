@@ -1,0 +1,28 @@
+<?php
+/**
+ * @var \Gzhegow\Front\FrontTemplateContract $this
+ */
+
+/** @see /tests/disc/html/modals/demo/layout.modal.phtml */
+$this->layout('@html::modals/demo/layout.modal', [
+    'id'    => 'demo',
+    'class' => null,
+]);
+
+?>
+
+
+<?php $this->start('modal-title'); ?>
+
+    <div style="text-align: center;">Пример модального окна</div>
+
+<?php $this->end(); ?>
+
+
+<?php $this->start('modal-content'); ?>
+
+    <div style="text-align: center;">
+        Я пример модального окна
+    </div>
+
+<?php $this->end(); ?>
