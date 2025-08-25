@@ -88,12 +88,8 @@ $config->configure(
         ];
         //
         // > устанавливаем языки, чтобы resolver с их поддержкой мог искать шаблоны в языковых подпапках
-        $config->langCurrent = 'ru';
-        $config->langDefault = 'ru';
-        //
-        // > устанавливаем наименование приложения для менеджера тегов (генерация атрибутов title/alt)
-        $config->appNameShort = 'Application';
-        $config->appNameFull = 'MyApp | Application';
+        $config->templateLangCurrent = 'ru';
+        $config->templateLangDefault = 'ru';
         //
         // > можно задать версию для ассетов, иначе для локальных будет использовано filemtime
         $config->assetVersion = '1.0.0';
@@ -123,6 +119,10 @@ $config->configure(
                 'png'          => true,
             ],
         ];
+        //
+        // > устанавливаем наименование приложения для менеджера тегов (генерация атрибутов title/alt)
+        $config->tagAppNameShort = 'Application';
+        $config->tagAppNameFull = 'MyApp | Application';
     }
 );
 

@@ -18,14 +18,14 @@ use Gzhegow\Lib\Config\AbstractConfig;
  * @property Folder[]                           $folders
  * @property Remote[]                           $remotes
  *
- * @property string                             $langCurrent
- * @property string                             $langDefault
- *
- * @property string                             $appNameShort
- * @property string                             $appNameFull
+ * @property string                             $templateLangCurrent
+ * @property string                             $templateLangDefault
  *
  * @property string|null                        $assetVersion
  * @property array<string, array<string, bool>> $assetExtensionsMap
+ *
+ * @property string                             $tagAppNameShort
+ * @property string                             $tagAppNameFull
  */
 class FrontConfig extends AbstractConfig
 {
@@ -59,20 +59,11 @@ class FrontConfig extends AbstractConfig
     /**
      * @var string|null
      */
-    protected $langCurrent;
+    protected $templateLangCurrent;
     /**
      * @var string|null
      */
-    protected $langDefault;
-
-    /**
-     * @var string
-     */
-    protected $appNameShort = 'Application';
-    /**
-     * @var string
-     */
-    protected $appNameFull = 'MyApp | Application';
+    protected $templateLangDefault;
 
     /**
      * @var string|null
@@ -106,6 +97,15 @@ class FrontConfig extends AbstractConfig
         ],
     ];
 
+    /**
+     * @var string
+     */
+    protected $tagAppNameShort = 'Application';
+    /**
+     * @var string
+     */
+    protected $tagAppNameFull = 'MyApp | Application';
+
 
     protected function validation(array $context = []) : bool
     {
@@ -128,20 +128,12 @@ class FrontConfig extends AbstractConfig
             $this->remotes[ $i ] = Remote::from($remote)->orThrow();
         }
 
-        if (null !== $this->langCurrent) {
-            $this->langCurrent = $theType->string_not_empty($this->langCurrent)->orThrow();
+        if (null !== $this->templateLangCurrent) {
+            $this->templateLangCurrent = $theType->string_not_empty($this->templateLangCurrent)->orThrow();
         }
 
-        if (null !== $this->langDefault) {
-            $this->langDefault = $theType->string_not_empty($this->langDefault)->orThrow();
-        }
-
-        if (null !== $this->appNameShort) {
-            $this->appNameShort = $theType->string_not_empty($this->appNameShort)->orThrow();
-        }
-
-        if (null !== $this->appNameFull) {
-            $this->appNameFull = $theType->string_not_empty($this->appNameFull)->orThrow();
+        if (null !== $this->templateLangDefault) {
+            $this->templateLangDefault = $theType->string_not_empty($this->templateLangDefault)->orThrow();
         }
 
         if (null !== $this->assetVersion) {
@@ -160,6 +152,14 @@ class FrontConfig extends AbstractConfig
                     $this->assetExtensionsMap[ $extFrom ][ $extTo ] = true;
                 }
             }
+        }
+
+        if (null !== $this->tagAppNameShort) {
+            $this->tagAppNameShort = $theType->string_not_empty($this->tagAppNameShort)->orThrow();
+        }
+
+        if (null !== $this->tagAppNameFull) {
+            $this->tagAppNameFull = $theType->string_not_empty($this->tagAppNameFull)->orThrow();
         }
 
         return true;
