@@ -118,11 +118,11 @@ class Template extends LeagueTemplate implements TemplateInterface
             return $this->pathResolved;
         }
 
-        $theResolveTemplatePath = $this->engine->getResolveTemplatePath();
+        $resolveTemplatePathInvokableObject = $this->engine->getResolveTemplatePath();
 
         try {
             $pathResolved = call_user_func_array(
-                $theResolveTemplatePath,
+                $resolveTemplatePathInvokableObject,
                 [ $this->name ]
             );
         }

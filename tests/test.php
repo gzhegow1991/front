@@ -146,7 +146,10 @@ $front->templateResolver(new \Gzhegow\Front\Core\TemplateResolver\FrontI18nTempl
 
 // > можно установить собственные обработчик GET_ITEM (например, изнутри шаблонов позволит брать сервисы из контейнера)
 $front->fnTemplateGetItem(
-    static function (string $name, \Gzhegow\Front\Package\League\Plates\Template\TemplateInterface $template) {
+    static function (
+        string $name, ?string $classT,
+        \Gzhegow\Front\Package\League\Plates\Template\TemplateInterface $template
+    ) {
         $data = $template->getData();
 
         return $data[ $name ] ?? null;
@@ -155,7 +158,10 @@ $front->fnTemplateGetItem(
 
 // > можно установить собственные обработчики CATCH_ERROR (например, не бросать исключения, а заменять в строке шаблона ошибку на строку и просто логировать)
 $front->fnTemplateCatchError(
-    static function (\Throwable $e, string $content, \Gzhegow\Front\Package\League\Plates\Template\TemplateInterface $template) {
+    static function (
+        \Throwable $e, string $content,
+        \Gzhegow\Front\Package\League\Plates\Template\TemplateInterface $template
+    ) {
         $eMessage = $e->getMessage();
         $templateName = $template->name();
 
