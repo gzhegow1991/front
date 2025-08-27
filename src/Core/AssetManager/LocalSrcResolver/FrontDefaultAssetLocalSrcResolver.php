@@ -46,10 +46,15 @@ class FrontDefaultAssetLocalSrcResolver extends AbstractFrontAssetLocalSrcResolv
             if (count($split) > 1) {
                 [ $srcAlias, $srcNormalized ] = $split;
 
-                [
-                    $directoryRealpath,
-                    $publicPathString,
-                ] = $this->frontStore->foldersByAlias[ $srcAlias ];
+                $folder = $this->frontStore->foldersByAlias[ $srcAlias ];
+
+                $directoryRealpath = $folder->getDirectory();
+
+                if (! $folder->hasPublicPath($publicPathString)) {
+                    throw new RuntimeException(
+                        [ 'The `folder` has no `publicPath`', $folderCurrent ]
+                    );
+                }
 
             } else {
                 if (null === $folderCurrent) {
@@ -120,15 +125,23 @@ class FrontDefaultAssetLocalSrcResolver extends AbstractFrontAssetLocalSrcResolv
         }
 
         if (null === $filePathNew) {
-            throw new RuntimeException(
-                [
-                    ''
-                    . 'The `file` is not found: '
-                    . '[ ' . implode(' ][ ', array_keys($files)) . ' ]',
-                    //
-                    $files,
-                ]
-            );
+            if (is_file($filePath)) {
+                $filePathNew = $filePath;
+                $srcNormalizedNew = $srcNormalized;
+
+            } else {
+                $files[ $filePath ] = true;
+
+                throw new RuntimeException(
+                    [
+                        ''
+                        . 'The `file` is not found: '
+                        . '[ ' . implode(' ][ ', array_keys($files)) . ' ]',
+                        //
+                        $files,
+                    ]
+                );
+            }
         }
 
         $srcPath = "{$publicPathString}/{$srcNormalizedNew}";
