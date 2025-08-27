@@ -1,7 +1,6 @@
 {
     "name": "gzhegow/front",
     "type": "library",
-    "version": "1.0.0",
     "license": "MIT",
 
     "authors": [
@@ -32,12 +31,16 @@
         "php": "^7.3|^8.0",
 
         "gzhegow/league-plates-84": "~3.6.0",
-        "gzhegow/lib": "~1.2.0"
+        "gzhegow/lib": "~1.0.0"
     },
 
     "config": {
         "optimize-autoloader": true,
 
         "sort-packages": false
+    },
+
+    "extra": {
+        "version": "1.0.0"
     }
 }
