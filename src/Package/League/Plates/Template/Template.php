@@ -273,7 +273,7 @@ class Template extends LeagueTemplate implements TemplateInterface
         $dataTotal = $dataTotal + $this->data;
 
         $template = $this->engine->make($name, $dataTotal);
-        $template->sections = $this->sections;
+        $template->sections =& $this->sections;
 
         try {
             $html = $template->render();
