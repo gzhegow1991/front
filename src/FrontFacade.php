@@ -15,10 +15,10 @@ use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface;
 use Gzhegow\Front\Core\TemplateResolver\FrontDefaultTemplateResolver;
 use Gzhegow\Front\Core\TemplateResolver\FrontTemplateResolverInterface;
 use Gzhegow\Front\Package\League\Plates\EngineInterface as PlatesEngineInterface;
-use Gzhegow\Front\Core\AssetManager\LocalSrcResolver\FrontDefaultAssetLocalSrcResolver;
-use Gzhegow\Front\Core\AssetManager\LocalSrcResolver\FrontAssetLocalSrcResolverInterface;
-use Gzhegow\Front\Core\AssetManager\RemoteSrcResolver\FrontDefaultAssetRemoteSrcResolver;
-use Gzhegow\Front\Core\AssetManager\RemoteSrcResolver\FrontAssetRemoteSrcResolverInterface;
+use Gzhegow\Front\Core\AssetManager\LocalResolver\FrontDefaultAssetLocalResolver;
+use Gzhegow\Front\Core\AssetManager\LocalResolver\FrontAssetLocalResolverInterface;
+use Gzhegow\Front\Core\AssetManager\RemoteResolver\FrontDefaultAssetRemoteResolver;
+use Gzhegow\Front\Core\AssetManager\RemoteResolver\FrontAssetRemoteResolverInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface as PlatesTemplateInterface;
 use Gzhegow\Front\Package\League\Plates\Template\ResolveTemplatePath\TemplateResolverResolveTemplatePath;
 
@@ -69,13 +69,13 @@ class FrontFacade implements FrontInterface
         FrontConfig $config,
         //
         ?FrontTemplateResolverInterface $templateResolver = null,
-        ?FrontAssetLocalSrcResolverInterface $assetLocalSrcResolver = null,
-        ?FrontAssetRemoteSrcResolverInterface $assetRemoteSrcResolver = null
+        ?FrontAssetLocalResolverInterface $assetLocalSrcResolver = null,
+        ?FrontAssetRemoteResolverInterface $assetRemoteSrcResolver = null
     )
     {
         $templateResolver = $templateResolver ?? new FrontDefaultTemplateResolver();
-        $assetLocalSrcResolver = $assetLocalSrcResolver ?? new FrontDefaultAssetLocalSrcResolver();
-        $assetRemoteSrcResolver = $assetRemoteSrcResolver ?? new FrontDefaultAssetRemoteSrcResolver();
+        $assetLocalSrcResolver = $assetLocalSrcResolver ?? new FrontDefaultAssetLocalResolver();
+        $assetRemoteSrcResolver = $assetRemoteSrcResolver ?? new FrontDefaultAssetRemoteResolver();
 
         $this->factory = $factory;
 
@@ -114,7 +114,7 @@ class FrontFacade implements FrontInterface
         $this->initialize();
 
         $this->templateResolver($templateResolver);
-        $this->assetLocalSrcResolver($assetLocalSrcResolver);
+        $this->assetLocalResolver($assetLocalSrcResolver);
         $this->assetRemoteSrcResolver($assetRemoteSrcResolver);
 
         $folderRoot = Folder::fromArray([
@@ -457,18 +457,18 @@ class FrontFacade implements FrontInterface
 
 
     /**
-     * @param FrontAssetLocalSrcResolverInterface|false|null $assetLocalSrcResolver
+     * @param FrontAssetLocalResolverInterface|false|null $assetLocalResolver
      */
-    public function assetLocalSrcResolver($assetLocalSrcResolver = null) : ?FrontAssetLocalSrcResolverInterface
+    public function assetLocalResolver($assetLocalResolver = null) : ?FrontAssetLocalResolverInterface
     {
-        return $this->assetManager->localSrcResolver($assetLocalSrcResolver);
+        return $this->assetManager->localResolver($assetLocalResolver);
     }
 
     /**
-     * @param FrontAssetRemoteSrcResolverInterface|false|null $assetRemoteSrcResolver
+     * @param FrontAssetRemoteResolverInterface|false|null $assetRemoteSrcResolver
      */
-    public function assetRemoteSrcResolver($assetRemoteSrcResolver = null) : ?FrontAssetRemoteSrcResolverInterface
+    public function assetRemoteSrcResolver($assetRemoteSrcResolver = null) : ?FrontAssetRemoteResolverInterface
     {
-        return $this->assetManager->remoteSrcResolver($assetRemoteSrcResolver);
+        return $this->assetManager->remoteResolver($assetRemoteSrcResolver);
     }
 }

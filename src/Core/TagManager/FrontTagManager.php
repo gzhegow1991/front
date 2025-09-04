@@ -38,11 +38,11 @@ class FrontTagManager implements FrontTagManagerInterface
 
         $attributesArray = $attributes ?? [];
 
-        $attributesArray[ 'alt' ] = $attributesArray[ 'alt' ] ?? '';
-        $attributesArray[ 'title' ] = $attributesArray[ 'title' ] ?? $attributesArray[ 'alt' ] ?? '';
+        $attributesArray['alt'] = $attributesArray['alt'] ?? '';
+        $attributesArray['title'] = $attributesArray['title'] ?? $attributesArray['alt'] ?? '';
 
-        $attributesArray[ 'alt' ] = ('' === $attributesArray[ 'alt' ]) ? false : $this->attrAlt($attributesArray[ 'alt' ]);
-        $attributesArray[ 'title' ] = ('' === $attributesArray[ 'title' ]) ? false : $this->attrTitle($attributesArray[ 'title' ]);
+        $attributesArray['alt'] = ('' === $attributesArray['alt']) ? false : $this->attrAlt($attributesArray['alt']);
+        $attributesArray['title'] = ('' === $attributesArray['title']) ? false : $this->attrTitle($attributesArray['title']);
 
         $htmlContent = implode("\n", $lines);
         $htmlContent = trim($htmlContent);
@@ -63,11 +63,11 @@ class FrontTagManager implements FrontTagManagerInterface
 
         $attributesArray = $attributes ?? [];
 
-        $attributesArray[ 'alt' ] = $attributesArray[ 'alt' ] ?? '';
-        $attributesArray[ 'title' ] = $attributesArray[ 'title' ] ?? $attributesArray[ 'alt' ] ?? '';
+        $attributesArray['alt'] = $attributesArray['alt'] ?? '';
+        $attributesArray['title'] = $attributesArray['title'] ?? $attributesArray['alt'] ?? '';
 
-        $attributesArray[ 'alt' ] = ('' === $attributesArray[ 'alt' ]) ? false : $this->attrAlt($attributesArray[ 'alt' ]);
-        $attributesArray[ 'title' ] = ('' === $attributesArray[ 'title' ]) ? false : $this->attrTitle($attributesArray[ 'title' ]);
+        $attributesArray['alt'] = ('' === $attributesArray['alt']) ? false : $this->attrAlt($attributesArray['alt']);
+        $attributesArray['title'] = ('' === $attributesArray['title']) ? false : $this->attrTitle($attributesArray['title']);
 
         $htmlAttributes = $this->attributes($attributesArray);
 
@@ -86,8 +86,8 @@ class FrontTagManager implements FrontTagManagerInterface
         $uriString = $theType->uri($url)->orThrow();
 
         $attributesArray = $attributes ?? [];
-        $attributesArray[ 'href' ] = $uriString;
-        $attributesArray[ 'title' ] = $title;
+        $attributesArray['href'] = $uriString;
+        $attributesArray['title'] = $title;
 
         $html = $this->tag('a', $content, $attributesArray);
 
@@ -105,15 +105,15 @@ class FrontTagManager implements FrontTagManagerInterface
         $uriString = $theType->uri($url)->orThrow();
 
         $attributesArray = $attributes ?? [];
-        $attributesArray[ 'title' ] = $title;
+        $attributesArray['title'] = $title;
 
-        $attributeTarget = $attributesArray[ 'target' ] ?? null;
+        $attributeTarget = $attributesArray['target'] ?? null;
         $attributeOnclick = $attributeTarget === '_blank'
             ? "window.open('{$uriString}');"
             : "location.href='{$uriString}';";
 
-        unset($attributesArray[ 'target' ]);
-        $attributesArray[ 'onclick' ] = $attributeOnclick;
+        unset($attributesArray['target']);
+        $attributesArray['onclick'] = $attributeOnclick;
 
         $html = $this->tag('button', $content, []
             + [
@@ -136,8 +136,8 @@ class FrontTagManager implements FrontTagManagerInterface
         $uriString = $theType->uri($url)->orThrow();
 
         $attributesArray = $attributes ?? [];
-        $attributesArray[ 'href' ] = $uriString;
-        $attributesArray[ 'alt' ] = $alt;
+        $attributesArray['href'] = $uriString;
+        $attributesArray['alt'] = $alt;
 
         $html = $this->tagShort('img', $attributesArray);
 
@@ -177,7 +177,7 @@ class FrontTagManager implements FrontTagManagerInterface
 
         $websiteAppName = $this->frontStore->appNameShort;
 
-        if ($altString !== $websiteAppName) {
+        if ( $altString !== $websiteAppName ) {
             $altString = "{$altString}{$separator}{$websiteAppName}";
         }
 
@@ -190,13 +190,13 @@ class FrontTagManager implements FrontTagManagerInterface
 
         $theType = Lib::type();
 
-        if (! $theType->string_not_empty($alt)->isOk([ &$altString ])) {
+        if ( ! $theType->string_not_empty($alt)->isOk([ &$altString ]) ) {
             return null;
         }
 
         $websiteAppName = $this->frontStore->appNameShort;
 
-        if ($altString !== $websiteAppName) {
+        if ( $altString !== $websiteAppName ) {
             $altString = "{$altString}{$separator}{$websiteAppName}";
         }
 
@@ -214,7 +214,7 @@ class FrontTagManager implements FrontTagManagerInterface
 
         $websiteAppName = $this->frontStore->appNameShort;
 
-        if ($titleString !== $websiteAppName) {
+        if ( $titleString !== $websiteAppName ) {
             $titleString = "{$titleString}{$separator}{$websiteAppName}";
         }
 
@@ -227,13 +227,13 @@ class FrontTagManager implements FrontTagManagerInterface
 
         $theType = Lib::type();
 
-        if (! $theType->string_not_empty($title)->isOk([ &$titleString ])) {
+        if ( ! $theType->string_not_empty($title)->isOk([ &$titleString ]) ) {
             return null;
         }
 
         $websiteAppName = $this->frontStore->appNameShort;
 
-        if ($titleString !== $websiteAppName) {
+        if ( $titleString !== $websiteAppName ) {
             $titleString = "{$titleString}{$separator}{$websiteAppName}";
         }
 
@@ -253,16 +253,16 @@ class FrontTagManager implements FrontTagManagerInterface
             [ &$parseUrlResult ]
         )->orThrow();
 
-        $serverHttpHost = $_SERVER[ 'HTTP_HOST' ] ?? null;
+        $serverHttpHost = $_SERVER['HTTP_HOST'] ?? null;
 
-        $urlScheme = ('' === $parseUrlResult[ 'scheme' ]) ? null : $parseUrlResult[ 'scheme' ];
-        $urlHost = ('' === $parseUrlResult[ 'host' ]) ? null : $parseUrlResult[ 'host' ];
+        $urlScheme = ('' === $parseUrlResult['scheme']) ? null : $parseUrlResult['scheme'];
+        $urlHost = ('' === $parseUrlResult['host']) ? null : $parseUrlResult['host'];
 
         $isCustomScheme = ! in_array($urlScheme, [ 'http', 'https' ]);
         $isHostRemote = ($serverHttpHost !== $urlHost);
 
-        if ($isCustomScheme || $isHostRemote) {
-            $attributesArray[ 'rel' ] = 'nofollow';
+        if ( $isCustomScheme || $isHostRemote ) {
+            $attributesArray['rel'] = 'nofollow';
         }
 
         $html = $this->tagAHref($content, $uriString, $title, $attributesArray);
@@ -283,17 +283,17 @@ class FrontTagManager implements FrontTagManagerInterface
             [ &$parseUrlResult ]
         )->orThrow();
 
-        $serverHttpHost = $_SERVER[ 'HTTP_HOST' ] ?? null;
+        $serverHttpHost = $_SERVER['HTTP_HOST'] ?? null;
 
-        $urlScheme = ('' === $parseUrlResult[ 'scheme' ]) ? null : $parseUrlResult[ 'scheme' ];
-        $urlHost = ('' === $parseUrlResult[ 'host' ]) ? null : $parseUrlResult[ 'host' ];
-        $urlFragment = ('' === $parseUrlResult[ 'fragment' ]) ? null : $parseUrlResult[ 'fragment' ];
+        $urlScheme = ('' === $parseUrlResult['scheme']) ? null : $parseUrlResult['scheme'];
+        $urlHost = ('' === $parseUrlResult['host']) ? null : $parseUrlResult['host'];
+        $urlFragment = ('' === $parseUrlResult['fragment']) ? null : $parseUrlResult['fragment'];
 
         $hasFragment = strlen($urlFragment);
         $isCustomScheme = ! in_array($urlScheme, [ 'http', 'https' ]);
         $isHostRemote = ($serverHttpHost !== $urlHost);
 
-        if ($isCustomScheme || $isHostRemote || $hasFragment) {
+        if ( $isCustomScheme || $isHostRemote || $hasFragment ) {
             $isCurrentPage = false;
 
         } else {
@@ -302,16 +302,16 @@ class FrontTagManager implements FrontTagManagerInterface
             $isCurrentPage = ($urlCurrentString === $uriString);
         }
 
-        if ($isCustomScheme || $isHostRemote) {
-            $attributesArray[ 'rel' ] = 'nofollow';
+        if ( $isCustomScheme || $isHostRemote ) {
+            $attributesArray['rel'] = 'nofollow';
 
             $isSecondTime = false;
 
         } else {
-            $isSecondTime = isset($this->linkSeoTimes[ $uriString ]);
+            $isSecondTime = isset($this->linkSeoTimes[$uriString]);
 
-            if (! $isSecondTime) {
-                $this->linkSeoTimes[ $uriString ] = true;
+            if ( ! $isSecondTime ) {
+                $this->linkSeoTimes[$uriString] = true;
             }
         }
 

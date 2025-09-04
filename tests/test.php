@@ -170,10 +170,10 @@ $front->fnTemplateCatchError(
 );
 
 // > можно добавить `assetLocalSrcResolver`, чтобы, проверять несколько файлов перед формированием src или добавлять параметр версии
-$front->assetLocalSrcResolver(new \Gzhegow\Front\Core\AssetManager\LocalSrcResolver\FrontDefaultAssetLocalSrcResolver());
+$front->assetLocalResolver(new \Gzhegow\Front\Core\AssetManager\LocalResolver\FrontDefaultAssetLocalResolver());
 
 // > можно добавить `assetRemoteSrcResolver`, чтобы, проверять несколько файлов перед формированием src или добавлять параметр версии
-$front->assetRemoteSrcResolver(new \Gzhegow\Front\Core\AssetManager\RemoteSrcResolver\FrontDefaultAssetRemoteSrcResolver());
+$front->assetRemoteSrcResolver(new \Gzhegow\Front\Core\AssetManager\RemoteResolver\FrontDefaultAssetRemoteResolver());
 
 // > создаем фасад, если удобно пользоваться статикой
 \Gzhegow\Front\Front::setFacade($front);
@@ -207,7 +207,10 @@ $test->expectStdout('
 <!-- [ >>> blocks/demo/block.demo.phtml ] -->\n
 <div>Пример блока</div>\n
 <div>\n
-    <img alt=\"Cat | Application\" src=\"/disc/html/blocks/demo/img/cat-300x300.png?v=1.0.0\" />\n
+    <img\n
+        alt=\"Cat | Application\" title=\"Cat | Application\"\n
+        src=\"D:\OpenServer\.org\@gzhegow\_1_\_1_front\tests\disc\html\blocks\demo\img\cat-300x300.png?v=1.0.0\"\n
+    />\n
 </div>\n
 <!-- [ <<< blocks/demo/block.demo.phtml ] -->\n
 <!-- [ <<< pages/demo/page.demo.phtml ] -->\n
@@ -271,7 +274,10 @@ $test->expectStdout('
 <!-- [ >>> blocks/demo/block.demo.phtml ] -->\n
 <div>Пример блока</div>\n
 <div>\n
-    <img alt=\"Cat | Application\" src=\"/disc/html/blocks/demo/img/cat-300x300.png?v=1.0.0\" />\n
+    <img\n
+        alt=\"Cat | Application\" title=\"Cat | Application\"\n
+        src=\"D:\OpenServer\.org\@gzhegow\_1_\_1_front\tests\disc\html\blocks\demo\img\cat-300x300.png?v=1.0.0\"\n
+    />\n
 </div>\n
 <!-- [ <<< blocks/demo/block.demo.phtml ] -->\n
 <!-- [ <<< pages/demo/page.demo.phtml ] -->\n

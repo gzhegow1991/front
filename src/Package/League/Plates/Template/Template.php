@@ -81,18 +81,18 @@ class Template extends LeagueTemplate implements TemplateInterface
 
         $match = [];
         foreach ( $this->frontStore->folders as $folder ) {
-            if (! $folder->hasPublicPath()) {
+            if ( ! $folder->hasPublicPath() ) {
                 continue;
             }
 
             $folderDirectoryRealpath = $folder->getDirectory();
 
-            if (0 === strpos($directoryRealpath, $folderDirectoryRealpath)) {
-                $match[ $folderDirectoryRealpath ] = $folder;
+            if ( 0 === strpos($directoryRealpath, $folderDirectoryRealpath) ) {
+                $match[$folderDirectoryRealpath] = $folder;
             }
         }
 
-        if ([] === $match) {
+        if ( [] === $match ) {
             throw new RuntimeException(
                 [ 'The `directory` is outside of all defined `folders`', $this ]
             );
@@ -114,7 +114,7 @@ class Template extends LeagueTemplate implements TemplateInterface
     {
         /** @see parent::path() */
 
-        if (null !== $this->pathResolved) {
+        if ( null !== $this->pathResolved ) {
             return $this->pathResolved;
         }
 
@@ -157,7 +157,7 @@ class Template extends LeagueTemplate implements TemplateInterface
     {
         $fnGetItem = $this->engine->fnTemplateGetItem();
 
-        if (null === $fnGetItem) {
+        if ( null === $fnGetItem ) {
             $theType = Lib::type();
 
             $item = $theType->key_exists($name, $this->data)->orThrow();
@@ -199,7 +199,7 @@ class Template extends LeagueTemplate implements TemplateInterface
 
             $fnCatchError = $this->engine->fnTemplateCatchError();
 
-            if (null !== $fnCatchError) {
+            if ( null !== $fnCatchError ) {
 
                 try {
                     $content = call_user_func_array(
@@ -224,12 +224,12 @@ class Template extends LeagueTemplate implements TemplateInterface
         $lines = explode("\n", $content);
         $lines = array_map('rtrim', $lines);
         foreach ( $lines as $i => $l ) {
-            if ('' === $l) {
-                unset($lines[ $i ]);
+            if ( '' === $l ) {
+                unset($lines[$i]);
             }
         }
 
-        if ($this->frontStore->isDebug) {
+        if ( $this->frontStore->isDebug ) {
             $relpath = $this->relpath();
 
             $lines = array_merge(
@@ -247,7 +247,7 @@ class Template extends LeagueTemplate implements TemplateInterface
 
         $content = implode("\n", $lines) . "\n";
 
-        if (isset($this->layoutName)) {
+        if ( isset($this->layoutName) ) {
             $layout = $this->engine->make($this->layoutName);
 
             $layout->sections = []
@@ -301,7 +301,7 @@ class Template extends LeagueTemplate implements TemplateInterface
     {
         $this->data = [];
 
-        if (null !== $data) {
+        if ( null !== $data ) {
             $this->data = $data;
         }
 
@@ -313,7 +313,7 @@ class Template extends LeagueTemplate implements TemplateInterface
      */
     public function data(?array $data = null) : array
     {
-        if (null !== $data) {
+        if ( null !== $data ) {
             $this->data = array_replace(
                 $this->data,
                 $data
@@ -326,7 +326,7 @@ class Template extends LeagueTemplate implements TemplateInterface
 
     public function content() : string
     {
-        return $this->sections[ 'content' ] ?? '';
+        return $this->sections['content'] ?? '';
     }
 
 
@@ -335,33 +335,80 @@ class Template extends LeagueTemplate implements TemplateInterface
         return $this->frontAssetManager;
     }
 
-    public function assetLocalSrc(
-        string $src,
-        ?Folder $folderRoot = null,
-        ?Folder $folderCurrent = null,
-        ?string $directoryCurrent = null
-    ) : string
+    /**
+     * @return array{
+     *     key: string,
+     *     folder: Folder,
+     *     realpath: string,
+     *     src: string,
+     *     version: string,
+     *     uri: string,
+     * }
+     */
+    public function assetLocal(
+        string $key,
+        ?string $directoryCurrent = null,
+        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
+    ) : array
     {
-        $folderRoot = $folderRoot ?? $this->frontStore->foldersByAlias[ Front::ROOT_FOLDER_ALIAS ] ?? null;
-        $folderCurrent = $folderCurrent ?? $this->folder();
         $directoryCurrent = $directoryCurrent ?? $this->dir();
 
-        return $this->frontAssetManager->localSrc(
-            $src,
-            $folderRoot,
-            $folderCurrent, $directoryCurrent
+        $folderRoot = $folderRoot ?? $this->frontStore->foldersByAlias[Front::ROOT_FOLDER_ALIAS] ?? null;
+        $folderCurrent = $folderCurrent ?? $this->folder();
+
+        return $this->frontAssetManager->resolveLocal(
+            $key,
+            $directoryCurrent,
+            $folderRoot, $folderCurrent
         );
     }
 
-    public function assetRemoteSrc(
-        string $src,
+    /**
+     * @return array{
+     *     key: string,
+     *     remote: Remote,
+     *     src: string,
+     *     version: string,
+     *     uri: string,
+     * }
+     */
+    public function assetRemote(
+        string $key,
+        ?Remote $remoteCurrent = null
+    ) : array
+    {
+        return $this->frontAssetManager->resolveRemote(
+            $key,
+            $remoteCurrent
+        );
+    }
+
+    public function assetLocalUri(
+        string $key,
+        ?string $directoryCurrent = null,
+        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
+    ) : string
+    {
+        $resolved = $this->assetLocal(
+            $key,
+            $directoryCurrent,
+            $folderRoot, $folderCurrent
+        );
+
+        return $resolved['uri'];
+    }
+
+    public function assetRemoteUri(
+        string $key,
         ?Remote $remoteCurrent = null
     ) : string
     {
-        return $this->frontAssetManager->remoteSrc(
-            $src,
+        $resolved = $this->frontAssetManager->resolveRemote(
+            $key,
             $remoteCurrent
         );
+
+        return $resolved['uri'];
     }
 
 

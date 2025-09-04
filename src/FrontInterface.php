@@ -7,8 +7,8 @@ use Gzhegow\Front\Core\Struct\Folder;
 use Gzhegow\Front\Core\Store\FrontStore;
 use Gzhegow\Front\Core\TemplateResolver\FrontTemplateResolverInterface;
 use Gzhegow\Front\Package\League\Plates\EngineInterface as PlatesEngineInterface;
-use Gzhegow\Front\Core\AssetManager\LocalSrcResolver\FrontAssetLocalSrcResolverInterface;
-use Gzhegow\Front\Core\AssetManager\RemoteSrcResolver\FrontAssetRemoteSrcResolverInterface;
+use Gzhegow\Front\Core\AssetManager\LocalResolver\FrontAssetLocalResolverInterface;
+use Gzhegow\Front\Core\AssetManager\RemoteResolver\FrontAssetRemoteResolverInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface as PlatesTemplateInterface;
 
 
@@ -114,12 +114,12 @@ interface FrontInterface
 
 
     /**
-     * @param FrontAssetLocalSrcResolverInterface|false|null $assetLocalSrcResolver
+     * @param FrontAssetLocalResolverInterface|false|null $assetLocalResolver
      */
-    public function assetLocalSrcResolver($assetLocalSrcResolver = null) : ?FrontAssetLocalSrcResolverInterface;
+    public function assetLocalResolver($assetLocalResolver = null) : ?FrontAssetLocalResolverInterface;
 
     /**
-     * @param FrontAssetRemoteSrcResolverInterface|false|null $assetRemoteSrcResolver
+     * @param FrontAssetRemoteResolverInterface|false|null $assetRemoteSrcResolver
      */
-    public function assetRemoteSrcResolver($assetRemoteSrcResolver = null) : ?FrontAssetRemoteSrcResolverInterface;
+    public function assetRemoteSrcResolver($assetRemoteSrcResolver = null) : ?FrontAssetRemoteResolverInterface;
 }

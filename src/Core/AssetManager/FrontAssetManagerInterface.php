@@ -5,8 +5,8 @@ namespace Gzhegow\Front\Core\AssetManager;
 use Gzhegow\Front\FrontInterface;
 use Gzhegow\Front\Core\Struct\Folder;
 use Gzhegow\Front\Core\Struct\Remote;
-use Gzhegow\Front\Core\AssetManager\LocalSrcResolver\FrontAssetLocalSrcResolverInterface;
-use Gzhegow\Front\Core\AssetManager\RemoteSrcResolver\FrontAssetRemoteSrcResolverInterface;
+use Gzhegow\Front\Core\AssetManager\LocalResolver\FrontAssetLocalResolverInterface;
+use Gzhegow\Front\Core\AssetManager\RemoteResolver\FrontAssetRemoteResolverInterface;
 
 
 interface FrontAssetManagerInterface
@@ -15,17 +15,43 @@ interface FrontAssetManagerInterface
 
 
     /**
-     * @param FrontAssetLocalSrcResolverInterface|false|null $localSrcResolver
+     * @param FrontAssetLocalResolverInterface|false|null $localResolver
      */
-    public function localSrcResolver($localSrcResolver) : ?FrontAssetLocalSrcResolverInterface;
+    public function localResolver($localResolver) : ?FrontAssetLocalResolverInterface;
 
-    public function localSrc(string $src, ?Folder $folderRoot = null, ?Folder $folderCurrent = null, ?string $directoryCurrent = null) : string;
+    /**
+     * @return array{
+     *     key: string,
+     *     folder: Folder,
+     *     realpath: string,
+     *     src: string,
+     *     version: string,
+     *     uri: string,
+     * }
+     */
+    public function resolveLocal(
+        string $key,
+        ?string $directoryCurrent = null,
+        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
+    ) : array;
 
 
     /**
-     * @param FrontAssetRemoteSrcResolverInterface|false|null $remoteSrcResolver
+     * @param FrontAssetRemoteResolverInterface|false|null $remoteResolver
      */
-    public function remoteSrcResolver($remoteSrcResolver) : ?FrontAssetRemoteSrcResolverInterface;
+    public function remoteResolver($remoteResolver) : ?FrontAssetRemoteResolverInterface;
 
-    public function remoteSrc(string $src, ?Remote $remoteCurrent = null) : string;
+    /**
+     * @return array{
+     *     key: string,
+     *     remote: Remote,
+     *     src: string,
+     *     version: string,
+     *     uri: string,
+     * }
+     */
+    public function resolveRemote(
+        string $key,
+        ?Remote $remoteCurrent = null
+    ) : array;
 }

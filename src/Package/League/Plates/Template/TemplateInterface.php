@@ -51,9 +51,46 @@ interface TemplateInterface
 
     public function getAssetManager() : FrontAssetManagerInterface;
 
-    public function assetLocalSrc(string $src, ?Folder $folderRoot = null, ?Folder $folderCurrent = null, ?string $directoryCurrent = null) : string;
+    /**
+     * @return array{
+     *     key: string,
+     *     folder: Folder,
+     *     realpath: string,
+     *     src: string,
+     *     version: string,
+     *     uri: string,
+     * }
+     */
+    public function assetLocal(
+        string $key,
+        ?string $directoryCurrent = null,
+        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
+    ) : array;
 
-    public function assetRemoteSrc(string $src, ?Remote $remoteCurrent = null) : string;
+    /**
+     * @return array{
+     *     key: string,
+     *     remote: Remote,
+     *     src: string,
+     *     version: string,
+     *     uri: string,
+     * }
+     */
+    public function assetRemote(
+        string $key,
+        ?Remote $remoteCurrent = null
+    ) : array;
+
+    public function assetLocalUri(
+        string $key,
+        ?string $directoryCurrent = null,
+        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
+    ) : string;
+
+    public function assetRemoteUri(
+        string $key,
+        ?Remote $remoteCurrent = null
+    ) : string;
 
 
     public function getTagManager() : FrontTagManagerInterface;

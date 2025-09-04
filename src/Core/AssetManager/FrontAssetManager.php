@@ -8,8 +8,8 @@ use Gzhegow\Front\Core\Store\FrontStore;
 use Gzhegow\Front\Core\Struct\Folder;
 use Gzhegow\Front\Core\Struct\Remote;
 use Gzhegow\Front\Exception\RuntimeException;
-use Gzhegow\Front\Core\AssetManager\LocalSrcResolver\FrontAssetLocalSrcResolverInterface;
-use Gzhegow\Front\Core\AssetManager\RemoteSrcResolver\FrontAssetRemoteSrcResolverInterface;
+use Gzhegow\Front\Core\AssetManager\LocalResolver\FrontAssetLocalResolverInterface;
+use Gzhegow\Front\Core\AssetManager\RemoteResolver\FrontAssetRemoteResolverInterface;
 
 
 class FrontAssetManager implements FrontAssetManagerInterface
@@ -20,13 +20,22 @@ class FrontAssetManager implements FrontAssetManagerInterface
     protected $frontStore;
 
     /**
-     * @var FrontAssetLocalSrcResolverInterface
+     * @var FrontAssetLocalResolverInterface
      */
-    protected $localSrcResolver;
+    protected $localResolver;
     /**
-     * @var FrontAssetRemoteSrcResolverInterface
+     * @var FrontAssetRemoteResolverInterface
      */
-    protected $remoteSrcResolver;
+    protected $remoteResolver;
+
+    /**
+     * @var array<string, array>
+     */
+    protected $cacheLocal = [];
+    /**
+     * @var array<string, array>
+     */
+    protected $cacheRemote = [];
 
 
     public function initialize(FrontInterface $front) : void
@@ -61,13 +70,13 @@ class FrontAssetManager implements FrontAssetManagerInterface
 
     public function getFolder(int $id) : Folder
     {
-        if (! isset($this->frontStore->folders[ $id ])) {
+        if ( ! isset($this->frontStore->folders[$id]) ) {
             throw new RuntimeException(
                 [ 'The `id` is missing: ' . $id, $id ]
             );
         }
 
-        return $this->frontStore->folders[ $id ];
+        return $this->frontStore->folders[$id];
     }
 
     public function getFolderByAlias(string $alias) : Folder
@@ -76,13 +85,13 @@ class FrontAssetManager implements FrontAssetManagerInterface
 
         $aliasString = $theType->string_not_empty($alias)->orThrow();
 
-        if (! isset($this->frontStore->foldersByAlias[ $aliasString ])) {
+        if ( ! isset($this->frontStore->foldersByAlias[$aliasString]) ) {
             throw new RuntimeException(
                 [ 'The `alias` is missing: ' . $alias, $alias ]
             );
         }
 
-        $folder = $this->frontStore->foldersByAlias[ $aliasString ];
+        $folder = $this->frontStore->foldersByAlias[$aliasString];
 
         return $folder;
     }
@@ -93,13 +102,13 @@ class FrontAssetManager implements FrontAssetManagerInterface
 
         $directoryRealpath = $theType->dirpath_realpath($directory)->orThrow();
 
-        if (! isset($this->frontStore->foldersByDirectory[ $directoryRealpath ])) {
+        if ( ! isset($this->frontStore->foldersByDirectory[$directoryRealpath]) ) {
             throw new RuntimeException(
                 [ 'The `directory` is missing: ' . $directory, $directory ]
             );
         }
 
-        $folder = $this->frontStore->foldersByDirectory[ $directoryRealpath ];
+        $folder = $this->frontStore->foldersByDirectory[$directoryRealpath];
 
         return $folder;
     }
@@ -115,13 +124,13 @@ class FrontAssetManager implements FrontAssetManagerInterface
 
     public function getRemote(int $id) : Remote
     {
-        if (! isset($this->frontStore->remotes[ $id ])) {
+        if ( ! isset($this->frontStore->remotes[$id]) ) {
             throw new RuntimeException(
                 [ 'The `id` is missing: ' . $id, $id ]
             );
         }
 
-        return $this->frontStore->remotes[ $id ];
+        return $this->frontStore->remotes[$id];
     }
 
     public function getRemoteByAlias(string $alias) : Remote
@@ -130,76 +139,151 @@ class FrontAssetManager implements FrontAssetManagerInterface
 
         $aliasString = $theType->string_not_empty($alias)->orThrow();
 
-        if (! isset($this->frontStore->remotesByAlias[ $aliasString ])) {
+        if ( ! isset($this->frontStore->remotesByAlias[$aliasString]) ) {
             throw new RuntimeException(
                 [ 'The `alias` is missing: ' . $alias, $alias ]
             );
         }
 
-        $remote = $this->frontStore->remotesByAlias[ $aliasString ];
+        $remote = $this->frontStore->remotesByAlias[$aliasString];
 
         return $remote;
     }
 
 
     /**
-     * @param FrontAssetLocalSrcResolverInterface|false|null $localSrcResolver
+     * @param FrontAssetLocalResolverInterface|false|null $localResolver
      */
-    public function localSrcResolver($localSrcResolver) : ?FrontAssetLocalSrcResolverInterface
+    public function localResolver($localResolver) : ?FrontAssetLocalResolverInterface
     {
-        $last = $this->localSrcResolver;
+        $last = $this->localResolver;
 
-        if (null !== $localSrcResolver) {
-            if (false === $localSrcResolver) {
-                $localSrcResolver = null;
+        if ( null !== $localResolver ) {
+            if ( false === $localResolver ) {
+                $localResolver = null;
 
             } else {
-                $localSrcResolver->setStore($this->frontStore);
+                $localResolver->setStore($this->frontStore);
             }
         }
 
-        $this->localSrcResolver = $localSrcResolver;
+        $this->localResolver = $localResolver;
 
         return $last;
     }
 
-    public function localSrc(string $src, ?Folder $folderRoot = null, ?Folder $folderCurrent = null, ?string $directoryCurrent = null) : string
+    /**
+     * @return array{
+     *     key: string,
+     *     folder: Folder,
+     *     realpath: string,
+     *     src: string,
+     *     version: string,
+     *     uri: string,
+     * }
+     */
+    public function resolveLocal(
+        string $key,
+        ?string $directoryCurrent = null,
+        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
+    ) : array
     {
-        if (null === $this->localSrcResolver) {
-            return $src;
+        if ( ! isset($this->cacheLocal[$key]) ) {
+            if ( null === $this->localResolver ) {
+                $src = $key;
+                $srcVersion = $this->frontStore->assetVersion ?? null;
+                $srcUri = $key;
+                if ( null !== $srcVersion ) {
+                    $theUrl = Lib::url();
+
+                    $srcUri = $theUrl->uri($src, [ 'v' => $srcVersion ]);
+                }
+
+                $this->cacheLocal[$key] = [
+                    'key'      => $key,
+                    'folder'   => null,
+                    'realpath' => null,
+                    'src'      => $src,
+                    'version'  => $srcVersion,
+                    'uri'      => $srcUri,
+                ];
+
+            } else {
+                $this->cacheLocal[$key] = $this->localResolver->resolve(
+                    $key,
+                    $directoryCurrent,
+                    $folderRoot, $folderCurrent,
+                );
+            }
         }
 
-        return $this->localSrcResolver->resolve($src, $folderRoot, $folderCurrent, $directoryCurrent);
+        return $this->cacheLocal[$key];
     }
 
 
     /**
-     * @param FrontAssetRemoteSrcResolverInterface|false|null $remoteSrcResolver
+     * @param FrontAssetRemoteResolverInterface|false|null $remoteResolver
      */
-    public function remoteSrcResolver($remoteSrcResolver) : ?FrontAssetRemoteSrcResolverInterface
+    public function remoteResolver($remoteResolver) : ?FrontAssetRemoteResolverInterface
     {
-        $last = $this->remoteSrcResolver;
+        $last = $this->remoteResolver;
 
-        if (null !== $remoteSrcResolver) {
-            if (false === $remoteSrcResolver) {
-                $remoteSrcResolver = null;
+        if ( null !== $remoteResolver ) {
+            if ( false === $remoteResolver ) {
+                $remoteResolver = null;
 
             } else {
-                $remoteSrcResolver->setStore($this->frontStore);
+                $remoteResolver->setStore($this->frontStore);
             }
         }
 
-        $this->remoteSrcResolver = $remoteSrcResolver;
+        $this->remoteResolver = $remoteResolver;
 
         return $last;
     }
 
-    public function remoteSrc(string $src, ?Remote $remoteCurrent = null) : string
+    /**
+     * @return array{
+     *     key: string,
+     *     remote: Remote,
+     *     src: string,
+     *     version: string,
+     *     uri: string,
+     * }
+     */
+    public function resolveRemote(
+        string $key,
+        ?Remote $remoteCurrent = null
+    ) : array
     {
-        if (null === $this->remoteSrcResolver) {
-            return $src;
+        if ( ! isset($this->cacheRemote[$key]) ) {
+            if ( null === $this->remoteResolver ) {
+                $src = $key;
+                $srcVersion = $this->frontStore->assetVersion ?? null;
+                $srcUri = $key;
+                if ( null !== $srcVersion ) {
+                    $theUrl = Lib::url();
+
+                    $srcUri = $theUrl->uri($src, [ 'v' => $srcVersion ]);
+                }
+
+                $this->cacheRemote[$key] = [
+                    'key'      => $key,
+                    'folder'   => null,
+                    'realpath' => null,
+                    'src'      => $src,
+                    'version'  => $srcVersion,
+                    'uri'      => $srcUri,
+                ];
+
+            } else {
+                $this->cacheRemote[$key] = $this->remoteResolver->resolve(
+                    $key,
+                    $remoteCurrent
+                );
+            }
         }
 
-        return $this->remoteSrcResolver->resolve($src, $remoteCurrent);
+        return $this->cacheRemote[$key];
     }
 }

@@ -6,5 +6,8 @@
 
 <div>Пример блока</div>
 <div>
-    <img alt="<?= $this->tagAttrAlt('Cat'); ?>" src="<?= $this->assetLocalSrc('img/cat-300x300.png'); ?>" />
+    <img
+        alt="<?= $this->tagAttrAlt('Cat'); ?>" title="<?= $this->tagAttrTitle('Cat'); ?>"
+        src="<?= $this->assetLocalUri('img/cat-300x300.png'); ?>"
+    />
 </div>
