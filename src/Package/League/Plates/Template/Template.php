@@ -295,13 +295,9 @@ class Template extends LeagueTemplate implements TemplateInterface
      */
     public function start($name)
     {
-        if ( isset($this->sections[$name]) ) {
-            throw new RuntimeException(
-                [ 'The section with `name` is already present, use `push()/unshift()` instead', $name ]
-            );
-        }
+        parent::start($name);
 
-        return parent::start($name);
+        return $this;
     }
 
     /**
@@ -310,7 +306,12 @@ class Template extends LeagueTemplate implements TemplateInterface
      */
     public function push($name)
     {
-        return parent::push($name);
+        $this->appendSection = true; /* for backward compatibility */
+        $this->sectionMode = self::SECTION_MODE_APPEND;
+
+        parent::start($name);
+
+        return $this;
     }
 
     /**
@@ -319,7 +320,12 @@ class Template extends LeagueTemplate implements TemplateInterface
      */
     public function unshift($name)
     {
-        return parent::unshift($name);
+        $this->appendSection = false; /* for backward compatibility */
+        $this->sectionMode = self::SECTION_MODE_PREPEND;
+
+        parent::start($name);
+
+        return $this;
     }
 
     /**
@@ -328,7 +334,9 @@ class Template extends LeagueTemplate implements TemplateInterface
      */
     public function stop()
     {
-        return parent::stop();
+        parent::stop();
+
+        return $this;
     }
 
     /**
@@ -337,27 +345,50 @@ class Template extends LeagueTemplate implements TemplateInterface
      */
     public function end()
     {
-        return parent::end();
+        parent::end();
+
+        return $this;
     }
 
     public function sectionStart($name) : TemplateInterface
     {
-        return parent::start($name);
+        if ( isset($this->sections[$name]) ) {
+            throw new RuntimeException(
+                [ 'The section with `name` is already present, use `push()/unshift()` instead', $name ]
+            );
+        }
+
+        parent::start($name);
+
+        return $this;
     }
 
     public function sectionPush($name) : TemplateInterface
     {
-        return parent::push($name);
+        parent::push($name);
+
+        return $this;
     }
 
     public function sectionUnshift($name) : TemplateInterface
     {
-        return parent::unshift($name);
+        parent::unshift($name);
+
+        return $this;
+    }
+
+    public function sectionStop() : TemplateInterface
+    {
+        parent::stop();
+
+        return $this;
     }
 
     public function sectionEnd() : TemplateInterface
     {
-        return parent::end();
+        parent::end();
+
+        return $this;
     }
 
 
