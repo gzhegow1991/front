@@ -119,7 +119,7 @@ interface FrontInterface
     public function assetLocalResolver($assetLocalResolver = null) : ?FrontAssetLocalResolverInterface;
 
     /**
-     * @param FrontAssetRemoteResolverInterface|false|null $assetRemoteSrcResolver
+     * @param FrontAssetRemoteResolverInterface|false|null $assetRemoteResolver
      */
-    public function assetRemoteSrcResolver($assetRemoteSrcResolver = null) : ?FrontAssetRemoteResolverInterface;
+    public function assetRemoteResolver($assetRemoteResolver = null) : ?FrontAssetRemoteResolverInterface;
 }

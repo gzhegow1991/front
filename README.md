@@ -186,11 +186,11 @@ $front->fnTemplateCatchError(
     }
 );
 
-// > можно добавить `assetLocalSrcResolver`, чтобы, проверять несколько файлов перед формированием src или добавлять параметр версии
+// > можно добавить `assetLocalResolver`, чтобы, проверять несколько файлов перед формированием src или добавлять параметр версии
 $front->assetLocalResolver(new \Gzhegow\Front\Core\AssetManager\LocalResolver\FrontDefaultAssetLocalResolver());
 
-// > можно добавить `assetRemoteSrcResolver`, чтобы, проверять несколько файлов перед формированием src или добавлять параметр версии
-$front->assetRemoteSrcResolver(new \Gzhegow\Front\Core\AssetManager\RemoteResolver\FrontDefaultAssetRemoteResolver());
+// > можно добавить `assetRemoteResolver`, чтобы, проверять несколько файлов перед формированием src или добавлять параметр версии
+$front->assetRemoteResolver(new \Gzhegow\Front\Core\AssetManager\RemoteResolver\FrontDefaultAssetRemoteResolver());
 
 // > создаем фасад, если удобно пользоваться статикой
 \Gzhegow\Front\Front::setFacade($front);

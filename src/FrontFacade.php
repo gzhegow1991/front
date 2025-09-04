@@ -69,13 +69,13 @@ class FrontFacade implements FrontInterface
         FrontConfig $config,
         //
         ?FrontTemplateResolverInterface $templateResolver = null,
-        ?FrontAssetLocalResolverInterface $assetLocalSrcResolver = null,
-        ?FrontAssetRemoteResolverInterface $assetRemoteSrcResolver = null
+        ?FrontAssetLocalResolverInterface $assetLocalResolver = null,
+        ?FrontAssetRemoteResolverInterface $assetRemoteResolver = null
     )
     {
         $templateResolver = $templateResolver ?? new FrontDefaultTemplateResolver();
-        $assetLocalSrcResolver = $assetLocalSrcResolver ?? new FrontDefaultAssetLocalResolver();
-        $assetRemoteSrcResolver = $assetRemoteSrcResolver ?? new FrontDefaultAssetRemoteResolver();
+        $assetLocalResolver = $assetLocalResolver ?? new FrontDefaultAssetLocalResolver();
+        $assetRemoteResolver = $assetRemoteResolver ?? new FrontDefaultAssetRemoteResolver();
 
         $this->factory = $factory;
 
@@ -114,8 +114,8 @@ class FrontFacade implements FrontInterface
         $this->initialize();
 
         $this->templateResolver($templateResolver);
-        $this->assetLocalResolver($assetLocalSrcResolver);
-        $this->assetRemoteSrcResolver($assetRemoteSrcResolver);
+        $this->assetLocalResolver($assetLocalResolver);
+        $this->assetRemoteResolver($assetRemoteResolver);
 
         $folderRoot = Folder::fromArray([
             'alias'       => Front::ROOT_FOLDER_ALIAS,
@@ -179,13 +179,13 @@ class FrontFacade implements FrontInterface
 
     public function getFolder(int $id) : Folder
     {
-        if (! isset($this->store->folders[ $id ])) {
+        if ( ! isset($this->store->folders[$id]) ) {
             throw new RuntimeException(
                 [ 'The `id` is missing: ' . $id, $id ]
             );
         }
 
-        return $this->store->folders[ $id ];
+        return $this->store->folders[$id];
     }
 
     public function getFolderByAlias(string $alias) : Folder
@@ -194,13 +194,13 @@ class FrontFacade implements FrontInterface
 
         $aliasString = $theType->string_not_empty($alias)->orThrow();
 
-        if (! isset($this->store->foldersByAlias[ $aliasString ])) {
+        if ( ! isset($this->store->foldersByAlias[$aliasString]) ) {
             throw new RuntimeException(
                 [ 'The `alias` is missing: ' . $alias, $alias ]
             );
         }
 
-        $folder = $this->store->foldersByAlias[ $aliasString ];
+        $folder = $this->store->foldersByAlias[$aliasString];
 
         return $folder;
     }
@@ -211,13 +211,13 @@ class FrontFacade implements FrontInterface
 
         $directoryRealpath = $theType->dirpath_realpath($directory)->orThrow();
 
-        if (! isset($this->store->foldersByDirectory[ $directoryRealpath ])) {
+        if ( ! isset($this->store->foldersByDirectory[$directoryRealpath]) ) {
             throw new RuntimeException(
                 [ 'The `directory` is missing: ' . $directory, $directory ]
             );
         }
 
-        $folder = $this->store->foldersByDirectory[ $directoryRealpath ];
+        $folder = $this->store->foldersByDirectory[$directoryRealpath];
 
         return $folder;
     }
@@ -235,9 +235,9 @@ class FrontFacade implements FrontInterface
         $i = array_key_last($this->store->folders);
         $i++;
 
-        $this->store->folders[ $i ] = $folderObject;
-        $this->store->foldersByAlias[ $folderAlias ] = $folderObject;
-        $this->store->foldersByDirectory[ $folderRealpath ] = $folderObject;
+        $this->store->folders[$i] = $folderObject;
+        $this->store->foldersByAlias[$folderAlias] = $folderObject;
+        $this->store->foldersByDirectory[$folderRealpath] = $folderObject;
 
         $this->engine->addFolder($folderAlias, $folderRealpath, false);
 
@@ -255,13 +255,13 @@ class FrontFacade implements FrontInterface
 
     public function getRemote(int $id) : Remote
     {
-        if (! isset($this->store->remotes[ $id ])) {
+        if ( ! isset($this->store->remotes[$id]) ) {
             throw new RuntimeException(
                 [ 'The `id` is missing: ' . $id, $id ]
             );
         }
 
-        return $this->store->remotes[ $id ];
+        return $this->store->remotes[$id];
     }
 
     public function getRemoteByAlias(string $alias) : Remote
@@ -270,13 +270,13 @@ class FrontFacade implements FrontInterface
 
         $aliasString = $theType->string_not_empty($alias)->orThrow();
 
-        if (! isset($this->store->remotesByAlias[ $aliasString ])) {
+        if ( ! isset($this->store->remotesByAlias[$aliasString]) ) {
             throw new RuntimeException(
                 [ 'The `alias` is missing: ' . $alias, $alias ]
             );
         }
 
-        $remote = $this->store->remotesByAlias[ $aliasString ];
+        $remote = $this->store->remotesByAlias[$aliasString];
 
         return $remote;
     }
@@ -293,8 +293,8 @@ class FrontFacade implements FrontInterface
         $i = array_key_last($this->store->remotes);
         $i++;
 
-        $this->store->remotes[ $i ] = $remoteObject;
-        $this->store->remotesByAlias[ $remoteAlias ] = $remoteObject;
+        $this->store->remotes[$i] = $remoteObject;
+        $this->store->remotesByAlias[$remoteAlias] = $remoteObject;
 
         return $i;
     }
@@ -323,8 +323,8 @@ class FrontFacade implements FrontInterface
     {
         $last = $this->templateResolver;
 
-        if (null !== $templateResolver) {
-            if (false === $templateResolver) {
+        if ( null !== $templateResolver ) {
+            if ( false === $templateResolver ) {
                 $this->engine->unsetResolveTemplatePath();
 
             } else {
@@ -380,12 +380,12 @@ class FrontFacade implements FrontInterface
     {
         $last = $this->store->templateLangCurrent;
 
-        if (null !== $langCurrent) {
-            if (false === $langCurrent) {
+        if ( null !== $langCurrent ) {
+            if ( false === $langCurrent ) {
                 $this->store->templateLangCurrent = null;
 
             } else {
-                if ('' === $langCurrent) {
+                if ( '' === $langCurrent ) {
                     throw new LogicException(
                         [ 'The `langCurrent` should be non-empty string', $langCurrent ]
                     );
@@ -405,12 +405,12 @@ class FrontFacade implements FrontInterface
     {
         $last = $this->store->templateLangDefault;
 
-        if (null !== $langDefault) {
-            if (false === $langDefault) {
+        if ( null !== $langDefault ) {
+            if ( false === $langDefault ) {
                 $this->store->templateLangDefault = null;
 
             } else {
-                if ('' === $langDefault) {
+                if ( '' === $langDefault ) {
                     throw new LogicException(
                         [ 'The `langDefault` should be non-empty string', $langDefault ]
                     );
@@ -465,10 +465,10 @@ class FrontFacade implements FrontInterface
     }
 
     /**
-     * @param FrontAssetRemoteResolverInterface|false|null $assetRemoteSrcResolver
+     * @param FrontAssetRemoteResolverInterface|false|null $assetRemoteResolver
      */
-    public function assetRemoteSrcResolver($assetRemoteSrcResolver = null) : ?FrontAssetRemoteResolverInterface
+    public function assetRemoteResolver($assetRemoteResolver = null) : ?FrontAssetRemoteResolverInterface
     {
-        return $this->assetManager->remoteResolver($assetRemoteSrcResolver);
+        return $this->assetManager->remoteResolver($assetRemoteResolver);
     }
 }

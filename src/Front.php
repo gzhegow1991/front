@@ -179,14 +179,14 @@ class Front
     }
 
 
-    public static function assetLocalSrcResolver($assetLocalSrcResolver) : ?FrontAssetLocalResolverInterface
+    public static function assetLocalResolver($assetLocalResolver) : ?FrontAssetLocalResolverInterface
     {
-        return static::$facade->assetLocalResolver($assetLocalSrcResolver);
+        return static::$facade->assetLocalResolver($assetLocalResolver);
     }
 
-    public static function assetRemoteSrcResolver($assetRemoteSrcResolver) : ?FrontAssetRemoteResolverInterface
+    public static function assetRemoteResolver($assetRemoteResolver) : ?FrontAssetRemoteResolverInterface
     {
-        return static::$facade->assetRemoteSrcResolver($assetRemoteSrcResolver);
+        return static::$facade->assetRemoteResolver($assetRemoteResolver);
     }
 
 
