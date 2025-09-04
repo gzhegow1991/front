@@ -226,7 +226,7 @@ $test->expectStdout('
 <div>\n
     <img\n
         alt=\"Cat | Application\" title=\"Cat | Application\"\n
-        src=\"D:\OpenServer\.org\@gzhegow\_1_\_1_front\tests\disc\html\blocks\demo\img\cat-300x300.png?v=1.0.0\"\n
+        src=\"/disc/html/blocks/demo/img/cat-300x300.png?v=1.0.0\"\n
     />\n
 </div>\n
 <!-- [ <<< blocks/demo/block.demo.phtml ] -->\n
@@ -293,7 +293,7 @@ $test->expectStdout('
 <div>\n
     <img\n
         alt=\"Cat | Application\" title=\"Cat | Application\"\n
-        src=\"D:\OpenServer\.org\@gzhegow\_1_\_1_front\tests\disc\html\blocks\demo\img\cat-300x300.png?v=1.0.0\"\n
+        src=\"/disc/html/blocks/demo/img/cat-300x300.png?v=1.0.0\"\n
     />\n
 </div>\n
 <!-- [ <<< blocks/demo/block.demo.phtml ] -->\n

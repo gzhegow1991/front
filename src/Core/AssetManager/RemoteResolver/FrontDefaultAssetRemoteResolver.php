@@ -61,7 +61,7 @@ class FrontDefaultAssetRemoteResolver extends AbstractFrontAssetRemoteResolver
         if ( null !== $srcVersion ) {
             $theUrl = Lib::url();
 
-            $srcUri = $theUrl->uri($src, [ 'v' => $srcVersion ]);
+            $srcUri = $theUrl->uri($srcUri, [ 'v' => $srcVersion ]);
         }
 
         $resolved = [

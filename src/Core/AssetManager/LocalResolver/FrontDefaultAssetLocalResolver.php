@@ -174,9 +174,9 @@ class FrontDefaultAssetLocalResolver extends AbstractFrontAssetLocalResolver
             ?? filemtime($srcRealpathNew)
             ?: null;
 
-        $srcUri = $srcFile;
+        $srcUri = $src;
         if ( null !== $srcVersion ) {
-            $srcUri = $theUrl->uri($srcFile, [ 'v' => $srcVersion ]);
+            $srcUri = $theUrl->uri($src, [ 'v' => $srcVersion ]);
         }
 
         $resolved = [
