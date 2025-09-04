@@ -12,17 +12,17 @@ $this->layout('@html::modals/demo/layout.modal', [
 ?>
 
 
-<?php $this->start('modal-title'); ?>
+<?php $this->sectionStart('modal-title'); ?>
 
     <div style="text-align: center;">Пример модального окна</div>
 
-<?php $this->end(); ?>
+<?php $this->sectionEnd(); ?>
 
 
-<?php $this->start('modal-content'); ?>
+<?php $this->sectionStart('modal-content'); ?>
 
     <div style="text-align: center;">
         Я пример модального окна
     </div>
 
-<?php $this->end(); ?>
+<?php $this->sectionEnd(); ?>

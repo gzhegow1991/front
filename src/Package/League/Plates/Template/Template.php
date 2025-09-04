@@ -289,6 +289,78 @@ class Template extends LeagueTemplate implements TemplateInterface
     }
 
 
+    /**
+     * @deprecated
+     * @internal
+     */
+    public function start($name)
+    {
+        if ( isset($this->sections[$name]) ) {
+            throw new RuntimeException(
+                [ 'The section with `name` is already present, use `push()/unshift()` instead', $name ]
+            );
+        }
+
+        return parent::start($name);
+    }
+
+    /**
+     * @deprecated
+     * @internal
+     */
+    public function push($name)
+    {
+        return parent::push($name);
+    }
+
+    /**
+     * @deprecated
+     * @internal
+     */
+    public function unshift($name)
+    {
+        return parent::unshift($name);
+    }
+
+    /**
+     * @deprecated
+     * @internal
+     */
+    public function stop()
+    {
+        return parent::stop();
+    }
+
+    /**
+     * @deprecated
+     * @internal
+     */
+    public function end()
+    {
+        return parent::end();
+    }
+
+    public function sectionStart($name) : TemplateInterface
+    {
+        return parent::start($name);
+    }
+
+    public function sectionPush($name) : TemplateInterface
+    {
+        return parent::push($name);
+    }
+
+    public function sectionUnshift($name) : TemplateInterface
+    {
+        return parent::unshift($name);
+    }
+
+    public function sectionEnd() : TemplateInterface
+    {
+        return parent::end();
+    }
+
+
     public function getData() : array
     {
         return $this->data;

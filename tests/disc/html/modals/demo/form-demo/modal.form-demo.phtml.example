@@ -12,23 +12,23 @@ $this->layout('@html::modals/demo/layout.modal-form', [
 ?>
 
 
-<?php $this->start('modal-title'); ?>
+<?php $this->sectionStart('modal-title'); ?>
 
     <div style="text-align: center;">Пример формы в модальном окне</div>
 
-<?php $this->end(); ?>
+<?php $this->sectionEnd(); ?>
 
 
-<?php $this->start('modal-content'); ?>
+<?php $this->sectionStart('modal-content'); ?>
 
     <div>
         Я пример формы в модальном окне
     </div>
 
-<?php $this->end(); ?>
+<?php $this->sectionEnd(); ?>
 
 
-<?php $this->start('form-content'); ?>
+<?php $this->sectionStart('form-content'); ?>
 
     <div>
 
@@ -45,10 +45,10 @@ $this->layout('@html::modals/demo/layout.modal-form', [
 
     </div>
 
-<?php $this->end(); ?>
+<?php $this->sectionEnd(); ?>
 
 
-<?php $this->start('form-buttons'); ?>
+<?php $this->sectionStart('form-buttons'); ?>
 
     <div style="display: flex; flex-wrap: nowrap; justify-content: center; align-items: center;">
 
@@ -56,4 +56,4 @@ $this->layout('@html::modals/demo/layout.modal-form', [
 
     </div>
 
-<?php $this->end(); ?>
+<?php $this->sectionEnd(); ?>

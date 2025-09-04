@@ -11,14 +11,14 @@ $this->layout('@html::modals/demo/layout.modal', [
 ?>
 
 
-<?php $this->start('modal-title'); ?>
+<?php $this->sectionStart('modal-title'); ?>
 
     <div>Всё отлично!</div>
 
-<?php $this->end(); ?>
+<?php $this->sectionEnd(); ?>
 
 
-<?php $this->start('modal-content'); ?>
+<?php $this->sectionStart('modal-content'); ?>
 
     <div>
         <div>
@@ -29,4 +29,4 @@ $this->layout('@html::modals/demo/layout.modal', [
         </div>
     </div>
 
-<?php $this->end(); ?>
+<?php $this->sectionEnd(); ?>
