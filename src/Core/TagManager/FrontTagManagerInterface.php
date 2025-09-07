@@ -10,28 +10,24 @@ interface FrontTagManagerInterface
     public function initialize(FrontInterface $front) : void;
 
 
-    public function tag(string $tag, $content, ?array $attributes = null) : string;
+    public function tag(string $tag, $content, array $attributes = []) : string;
 
 
     /**
      * @param string|string[] $content
-     * @param string|true     $url
      */
-    public function tagAHref($content, $url, ?string $title = null, ?array $attributes = null) : string;
+    public function tagAButton($content, string $url, $title = null, array $attributes = []) : string;
 
     /**
      * @param string|string[] $content
-     * @param string|true     $url
      */
-    public function tagAButton($content, $url, ?string $title = null, ?array $attributes = null) : string;
-
-    /**
-     * @param string|true $url
-     */
-    public function tagImg($url, ?string $alt = null, ?array $attributes = null) : string;
+    public function tagAHref($content, string $url, $title = null, array $attributes = []) : string;
 
 
-    public function attributes(?array $attributes = null) : string;
+    public function tagImg(string $src, $alt, array $attributes = []) : string;
+
+
+    public function attributes(array $attributes = []) : string;
 
 
     public function attrAlt($alt) : string;
@@ -43,7 +39,9 @@ interface FrontTagManagerInterface
     public function attrTitleOrNull($title) : ?string;
 
 
-    public function linkHref($content, $url = true, ?string $title = null, ?array $attributes = null) : string;
+    public function linkButton($content, string $url, $title = null, array $attributes = []) : string;
 
-    public function linkSeo($content, $url = true, ?string $title = null, ?array $attributes = null) : string;
+    public function linkHref($content, string $url, $title = null, array $attributes = []) : string;
+
+    public function linkSeo($content, string $url, $title = null, array $attributes = []) : string;
 }

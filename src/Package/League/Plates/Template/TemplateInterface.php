@@ -95,9 +95,21 @@ interface TemplateInterface
 
     public function getTagManager() : FrontTagManagerInterface;
 
-    public function tag(string $tag, $content, ?array $attributes = null) : string;
+    public function tag(string $tag, $content, array $attributes = []) : string;
 
-    public function tagAttributes(?array $attributes = null) : string;
+    /**
+     * @param string|string[] $content
+     */
+    public function tagAButton($content, string $url, $title = null, array $attributes = []) : string;
+
+    /**
+     * @param string|string[] $content
+     */
+    public function tagAHref($content, string $url, $title = null, array $attributes = []) : string;
+
+    public function tagImg(string $src, $alt, array $attributes = []) : string;
+
+    public function tagAttributes(array $attributes = []) : string;
 
     public function tagAttrAlt($alt) : string;
 
@@ -107,7 +119,9 @@ interface TemplateInterface
 
     public function tagAttrTitleOrNull($title) : ?string;
 
-    public function tagLinkSeo($content, ?string $url, ?string $title = null, ?array $attributes = null) : string;
+    public function tagLinkButton($content, string $url, $title = null, array $attributes = []) : string;
 
-    public function tagLinkHref($content, ?string $url, ?string $title = null, ?array $attributes = null) : string;
+    public function tagLinkHref($content, string $url, $title = null, array $attributes = []) : string;
+
+    public function tagLinkSeo($content, string $url, $title = null, array $attributes = []) : string;
 }

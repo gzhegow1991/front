@@ -26,7 +26,7 @@ class FrontTagManager implements FrontTagManagerInterface
     }
 
 
-    public function tag(string $tag, $content, ?array $attributes = null) : string
+    public function tag(string $tag, $content, array $attributes = []) : string
     {
         $theType = Lib::type();
 
@@ -55,7 +55,7 @@ class FrontTagManager implements FrontTagManagerInterface
             . "</{$tagString}>";
     }
 
-    public function tagShort(string $tag, ?array $attributes = null) : string
+    public function tagShort(string $tag, array $attributes = []) : string
     {
         $theType = Lib::type();
 
@@ -77,28 +77,8 @@ class FrontTagManager implements FrontTagManagerInterface
 
     /**
      * @param string|string[] $content
-     * @param string|true     $url
      */
-    public function tagAHref($content, $url, ?string $title = null, ?array $attributes = null) : string
-    {
-        $theType = Lib::type();
-
-        $uriString = $theType->uri($url)->orThrow();
-
-        $attributesArray = $attributes ?? [];
-        $attributesArray['href'] = $uriString;
-        $attributesArray['title'] = $title;
-
-        $html = $this->tag('a', $content, $attributesArray);
-
-        return $html;
-    }
-
-    /**
-     * @param string|string[] $content
-     * @param string|true     $url
-     */
-    public function tagAButton($content, $url, ?string $title = null, ?array $attributes = null) : string
+    public function tagAButton($content, string $url, $title = null, array $attributes = []) : string
     {
         $theType = Lib::type();
 
@@ -127,13 +107,28 @@ class FrontTagManager implements FrontTagManagerInterface
     }
 
     /**
-     * @param string|true $url
+     * @param string|string[] $content
      */
-    public function tagImg($url, ?string $alt = null, ?array $attributes = null) : string
+    public function tagAHref($content, string $url, $title = null, array $attributes = []) : string
     {
         $theType = Lib::type();
 
         $uriString = $theType->uri($url)->orThrow();
+
+        $attributesArray = $attributes ?? [];
+        $attributesArray['href'] = $uriString;
+        $attributesArray['title'] = $title;
+
+        $html = $this->tag('a', $content, $attributesArray);
+
+        return $html;
+    }
+
+    public function tagImg(string $src, $alt, array $attributes = []) : string
+    {
+        $theType = Lib::type();
+
+        $uriString = $theType->uri($src)->orThrow();
 
         $attributesArray = $attributes ?? [];
         $attributesArray['href'] = $uriString;
@@ -145,13 +140,15 @@ class FrontTagManager implements FrontTagManagerInterface
     }
 
 
-    public function attributes(?array $attributes = null) : string
+    public function attributes(array $attributes = []) : string
     {
-        $attributesArray = $attributes ?? [];
+        if ( [] === $attributes ) {
+            return '';
+        }
 
         $content = [];
 
-        foreach ( $attributesArray as $k => $v ) {
+        foreach ( $attributes as $k => $v ) {
             $content[] = null
                 ?? (($v === true) ? "{$k}=\"{$k}\"" : null)
                 ?? (($v === false) ? "" : null)
@@ -190,6 +187,14 @@ class FrontTagManager implements FrontTagManagerInterface
 
         $theType = Lib::type();
 
+        if ( null === $alt ) {
+            return null;
+        }
+
+        if ( '' === $alt ) {
+            return null;
+        }
+
         if ( ! $theType->string_not_empty($alt)->isOk([ &$altString ]) ) {
             return null;
         }
@@ -227,6 +232,14 @@ class FrontTagManager implements FrontTagManagerInterface
 
         $theType = Lib::type();
 
+        if ( null === $title ) {
+            return null;
+        }
+
+        if ( '' === $title ) {
+            return null;
+        }
+
         if ( ! $theType->string_not_empty($title)->isOk([ &$titleString ]) ) {
             return null;
         }
@@ -241,7 +254,36 @@ class FrontTagManager implements FrontTagManagerInterface
     }
 
 
-    public function linkHref($content, $url = true, ?string $title = null, ?array $attributes = null) : string
+    public function linkButton($content, string $url, $title = null, array $attributes = []) : string
+    {
+        $theType = Lib::type();
+
+        $attributesArray = $attributes ?? [];
+
+        $uriString = $theType->uri(
+            $url, null, null,
+            1, 1,
+            [ &$parseUrlResult ]
+        )->orThrow();
+
+        $serverHttpHost = $_SERVER['HTTP_HOST'] ?? null;
+
+        $urlScheme = ('' === $parseUrlResult['scheme']) ? null : $parseUrlResult['scheme'];
+        $urlHost = ('' === $parseUrlResult['host']) ? null : $parseUrlResult['host'];
+
+        $isCustomScheme = ! in_array($urlScheme, [ 'http', 'https' ]);
+        $isHostRemote = ($serverHttpHost !== $urlHost);
+
+        if ( $isCustomScheme || $isHostRemote ) {
+            $attributesArray['rel'] = 'nofollow';
+        }
+
+        $html = $this->tagAButton($content, $uriString, $title, $attributesArray);
+
+        return $html;
+    }
+
+    public function linkHref($content, string $url, $title = null, array $attributes = []) : string
     {
         $theType = Lib::type();
 
@@ -270,7 +312,7 @@ class FrontTagManager implements FrontTagManagerInterface
         return $html;
     }
 
-    public function linkSeo($content, $url = true, ?string $title = null, ?array $attributes = null) : string
+    public function linkSeo($content, string $url, $title = null, array $attributes = []) : string
     {
         $theType = Lib::type();
         $theUrl = Lib::url();

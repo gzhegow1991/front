@@ -7,6 +7,7 @@ use Gzhegow\Front\Front;
 use Gzhegow\Front\Core\Store\FrontStore;
 use Gzhegow\Front\Core\Struct\Folder;
 use Gzhegow\Front\Core\Struct\Remote;
+use Gzhegow\Lib\Exception\LogicException;
 use Gzhegow\Front\Exception\RuntimeException;
 use Gzhegow\Front\Package\League\Plates\Engine;
 use League\Plates\Template\Template as LeagueTemplate;
@@ -41,6 +42,23 @@ class Template extends LeagueTemplate implements TemplateInterface
      * @var string
      */
     protected $pathResolved;
+
+    /**
+     * @var array
+     */
+    protected $sections = [
+        'content' => '',
+        'css'     => '',
+        'js'      => '',
+    ];
+    /**
+     * @var string
+     */
+    protected $css = [];
+    /**
+     * @var string
+     */
+    protected $js = [];
 
 
     public function __construct(
@@ -273,6 +291,8 @@ class Template extends LeagueTemplate implements TemplateInterface
         $dataTotal = $dataTotal + $this->data;
 
         $template = $this->engine->make($name, $dataTotal);
+        $template->css =& $this->css;
+        $template->js =& $this->js;
         $template->sections =& $this->sections;
 
         try {
@@ -295,7 +315,21 @@ class Template extends LeagueTemplate implements TemplateInterface
      */
     public function start($name)
     {
-        parent::start($name);
+        if ( in_array($name, [ 'content', 'css', 'js' ]) ) {
+            throw new LogicException(
+                [ 'The section name is reserved: ' . $name, $name ]
+            );
+        }
+
+        if ( $this->sectionName ) {
+            throw new LogicException(
+                [ 'You cannot nest sections within other sections.' ]
+            );
+        }
+
+        $this->sectionName = $name;
+
+        ob_start();
 
         return $this;
     }
@@ -306,10 +340,7 @@ class Template extends LeagueTemplate implements TemplateInterface
      */
     public function push($name)
     {
-        $this->appendSection = true; /* for backward compatibility */
-        $this->sectionMode = self::SECTION_MODE_APPEND;
-
-        parent::start($name);
+        parent::push($name);
 
         return $this;
     }
@@ -320,10 +351,7 @@ class Template extends LeagueTemplate implements TemplateInterface
      */
     public function unshift($name)
     {
-        $this->appendSection = false; /* for backward compatibility */
-        $this->sectionMode = self::SECTION_MODE_PREPEND;
-
-        parent::start($name);
+        parent::unshift($name);
 
         return $this;
     }
@@ -358,35 +386,35 @@ class Template extends LeagueTemplate implements TemplateInterface
             );
         }
 
-        parent::start($name);
+        $this->start($name);
 
         return $this;
     }
 
     public function sectionPush($name) : TemplateInterface
     {
-        parent::push($name);
+        $this->push($name);
 
         return $this;
     }
 
     public function sectionUnshift($name) : TemplateInterface
     {
-        parent::unshift($name);
+        $this->unshift($name);
 
         return $this;
     }
 
     public function sectionStop() : TemplateInterface
     {
-        parent::stop();
+        $this->stop();
 
         return $this;
     }
 
     public function sectionEnd() : TemplateInterface
     {
-        parent::end();
+        $this->end();
 
         return $this;
     }
@@ -430,6 +458,67 @@ class Template extends LeagueTemplate implements TemplateInterface
     public function content() : string
     {
         return $this->sections['content'] ?? '';
+    }
+
+
+    public function css(string $src, array $attributes = [])
+    {
+        $assetLocalUri = $this->assetLocalUri($src);
+
+        if ( ! isset($this->css[$assetLocalUri]) ) {
+            $htmlAttributes = $this->tagAttributes($attributes);
+
+            $this->sections['css'] .= "<link rel=\"stylesheet\" href=\"{$assetLocalUri}\" {$htmlAttributes} />\n";
+
+            $this->css[$assetLocalUri] = true;
+        }
+
+        return $this;
+    }
+
+    public function cssRemote(string $src, array $attributes = [])
+    {
+        $assetRemoteUri = $this->assetRemoteUri($src);
+
+        if ( ! isset($this->css[$assetRemoteUri]) ) {
+            $htmlAttributes = $this->tagAttributes($attributes);
+
+            $this->sections['css'] .= "<link rel=\"stylesheet\" href=\"{$assetRemoteUri}\" {$htmlAttributes} />\n";
+
+            $this->css[$assetRemoteUri] = true;
+        }
+
+        return $this;
+    }
+
+    public function js(string $src, array $attributes = [])
+    {
+        $assetLocalUri = $this->assetLocalUri($src);
+
+        if ( ! isset($this->js[$assetLocalUri]) ) {
+            $htmlAttributes = $this->tagAttributes($attributes);
+
+            $this->sections['js'] .= "<script src=\"{$assetLocalUri}\" {$htmlAttributes} />\n";
+
+            $this->js[$assetLocalUri] = true;
+        }
+
+        return $this;
+    }
+
+    public function jsRemote(string $src, array $attributes = [])
+    {
+        $assetRemoteUri = $this->assetRemoteUri($src);
+
+        if ( ! isset($this->js[$assetRemoteUri]) ) {
+            $htmlAttributes = $this->tagAttributes($attributes);
+
+            $this->sections['js'] .= "<script src=\"{$assetRemoteUri}\" {$htmlAttributes} />\n";
+
+            $this->js[$assetRemoteUri] = true;
+        }
+
+        return $this;
     }
 
 
@@ -520,14 +609,41 @@ class Template extends LeagueTemplate implements TemplateInterface
         return $this->frontTagManager;
     }
 
-    public function tag(string $tag, $content, ?array $attributes = null) : string
+    public function tag(string $tag, $content, array $attributes = []) : string
     {
         $html = $this->frontTagManager->tag($tag, $content, $attributes);
 
         return $html;
     }
 
-    public function tagAttributes(?array $attributes = null) : string
+    /**
+     * @param string|string[] $content
+     */
+    public function tagAButton($content, string $url, $title = null, array $attributes = []) : string
+    {
+        $html = $this->frontTagManager->tagAButton($content, $url, $title, $attributes);
+
+        return $html;
+    }
+
+    /**
+     * @param string|string[] $content
+     */
+    public function tagAHref($content, string $url, $title = null, array $attributes = []) : string
+    {
+        $html = $this->frontTagManager->tagAHref($content, $url, $title, $attributes);
+
+        return $html;
+    }
+
+    public function tagImg(string $src, $alt, array $attributes = []) : string
+    {
+        $html = $this->frontTagManager->tagImg($src, $alt, $attributes);
+
+        return $html;
+    }
+
+    public function tagAttributes(array $attributes = []) : string
     {
         $html = $this->frontTagManager->attributes($attributes);
 
@@ -562,14 +678,21 @@ class Template extends LeagueTemplate implements TemplateInterface
         return $html;
     }
 
-    public function tagLinkHref($content, ?string $url, ?string $title = null, ?array $attributes = null) : string
+    public function tagLinkButton($content, string $url, $title = null, array $attributes = []) : string
+    {
+        $html = $this->frontTagManager->linkButton($content, $url, $title, $attributes);
+
+        return $html;
+    }
+
+    public function tagLinkHref($content, string $url, $title = null, array $attributes = []) : string
     {
         $html = $this->frontTagManager->linkHref($content, $url, $title, $attributes);
 
         return $html;
     }
 
-    public function tagLinkSeo($content, ?string $url, ?string $title = null, ?array $attributes = null) : string
+    public function tagLinkSeo($content, string $url, $title = null, array $attributes = []) : string
     {
         $html = $this->frontTagManager->linkSeo($content, $url, $title, $attributes);
 
