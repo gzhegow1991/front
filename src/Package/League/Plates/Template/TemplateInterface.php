@@ -67,6 +67,25 @@ interface TemplateInterface
         ?Folder $folderRoot = null, ?Folder $folderCurrent = null
     ) : array;
 
+    public function assetLocalRealpath(
+        string $key,
+        ?string $directoryCurrent = null,
+        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
+    ) : string;
+
+    public function assetLocalSrc(
+        string $key,
+        ?string $directoryCurrent = null,
+        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
+    ) : string;
+
+    public function assetLocalUri(
+        string $key,
+        ?string $directoryCurrent = null,
+        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
+    ) : string;
+
+
     /**
      * @return array{
      *     key: string,
@@ -81,10 +100,9 @@ interface TemplateInterface
         ?Remote $remoteCurrent = null
     ) : array;
 
-    public function assetLocalUri(
+    public function assetRemoteSrc(
         string $key,
-        ?string $directoryCurrent = null,
-        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
+        ?Remote $remoteCurrent = null
     ) : string;
 
     public function assetRemoteUri(

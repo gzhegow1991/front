@@ -555,6 +555,52 @@ class Template extends LeagueTemplate implements TemplateInterface
         );
     }
 
+    public function assetLocalRealpath(
+        string $key,
+        ?string $directoryCurrent = null,
+        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
+    ) : string
+    {
+        $resolved = $this->assetLocal(
+            $key,
+            $directoryCurrent,
+            $folderRoot, $folderCurrent
+        );
+
+        return $resolved['realpath'];
+    }
+
+    public function assetLocalSrc(
+        string $key,
+        ?string $directoryCurrent = null,
+        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
+    ) : string
+    {
+        $resolved = $this->assetLocal(
+            $key,
+            $directoryCurrent,
+            $folderRoot, $folderCurrent
+        );
+
+        return $resolved['src'];
+    }
+
+    public function assetLocalUri(
+        string $key,
+        ?string $directoryCurrent = null,
+        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
+    ) : string
+    {
+        $resolved = $this->assetLocal(
+            $key,
+            $directoryCurrent,
+            $folderRoot, $folderCurrent
+        );
+
+        return $resolved['uri'];
+    }
+
+
     /**
      * @return array{
      *     key: string,
@@ -575,19 +621,17 @@ class Template extends LeagueTemplate implements TemplateInterface
         );
     }
 
-    public function assetLocalUri(
+    public function assetRemoteSrc(
         string $key,
-        ?string $directoryCurrent = null,
-        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
+        ?Remote $remoteCurrent = null
     ) : string
     {
-        $resolved = $this->assetLocal(
+        $resolved = $this->frontAssetManager->resolveRemote(
             $key,
-            $directoryCurrent,
-            $folderRoot, $folderCurrent
+            $remoteCurrent
         );
 
-        return $resolved['uri'];
+        return $resolved['src'];
     }
 
     public function assetRemoteUri(
