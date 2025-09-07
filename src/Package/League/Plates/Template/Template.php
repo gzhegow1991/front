@@ -498,7 +498,7 @@ class Template extends LeagueTemplate implements TemplateInterface
         if ( ! isset($this->js[$assetLocalUri]) ) {
             $htmlAttributes = $this->tagAttributes($attributes);
 
-            $this->sections['js'] .= "<script src=\"{$assetLocalUri}\" {$htmlAttributes} />\n";
+            $this->sections['js'] .= "<script src=\"{$assetLocalUri}\" {$htmlAttributes}></script>\n";
 
             $this->js[$assetLocalUri] = true;
         }
@@ -513,7 +513,7 @@ class Template extends LeagueTemplate implements TemplateInterface
         if ( ! isset($this->js[$assetRemoteUri]) ) {
             $htmlAttributes = $this->tagAttributes($attributes);
 
-            $this->sections['js'] .= "<script src=\"{$assetRemoteUri}\" {$htmlAttributes} />\n";
+            $this->sections['js'] .= "<script src=\"{$assetRemoteUri}\" {$htmlAttributes}></script>\n";
 
             $this->js[$assetRemoteUri] = true;
         }
