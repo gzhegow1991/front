@@ -261,9 +261,12 @@ class Template extends LeagueTemplate implements TemplateInterface
 
         if ( [] !== $this->sections ) {
             foreach ( array_keys($this->sections) as $name ) {
+                $sectionPlaceholder = static::SECTION_BRACES[0] . $name . static::SECTION_BRACES[1];
+                $sectionContent = $this->sections[$name] ?? '';
+
                 $content = str_replace(
-                    static::SECTION_BRACES[0] . $name . static::SECTION_BRACES[1],
-                    $this->sections[$name],
+                    $sectionPlaceholder,
+                    $sectionContent,
                     $content
                 );
             }
@@ -390,8 +393,8 @@ class Template extends LeagueTemplate implements TemplateInterface
 
     public function section($name, $default = null)
     {
-        if ( ! isset($this->sections[$name]) ) {
-            return $default;
+        if ( ! array_key_exists($name, $this->sections) ) {
+            $this->sections[$name] = $default;
         }
 
         return static::SECTION_BRACES[0] . $name . static::SECTION_BRACES[1];
@@ -399,7 +402,7 @@ class Template extends LeagueTemplate implements TemplateInterface
 
     public function sectionStart($name) : TemplateInterface
     {
-        if ( isset($this->sections[$name]) ) {
+        if ( array_key_exists($name, $this->sections) ) {
             throw new RuntimeException(
                 [ 'The section with `name` is already present, use `push()/unshift()` instead', $name ]
             );
@@ -589,7 +592,7 @@ class Template extends LeagueTemplate implements TemplateInterface
 
     /**
      * @return array{
-     *     key: string,
+     *     input: string,
      *     folder: Folder,
      *     realpath: string,
      *     src: string,
@@ -628,7 +631,7 @@ class Template extends LeagueTemplate implements TemplateInterface
 
     /**
      * @return array{
-     *     key: string,
+     *     input: string,
      *     remote: Remote,
      *     src: string,
      *     version: string,

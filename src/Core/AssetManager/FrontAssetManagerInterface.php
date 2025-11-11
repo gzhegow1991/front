@@ -22,7 +22,7 @@ interface FrontAssetManagerInterface
 
     /**
      * @return array{
-     *     key: string,
+     *     input: string,
      *     folder: Folder,
      *     realpath: string,
      *     src: string,
@@ -40,7 +40,7 @@ interface FrontAssetManagerInterface
 
     /**
      * @return array{
-     *     key: string,
+     *     input: string,
      *     remote: Remote,
      *     src: string,
      *     version: string,
