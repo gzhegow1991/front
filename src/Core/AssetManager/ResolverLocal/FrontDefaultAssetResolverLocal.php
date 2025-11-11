@@ -1,46 +1,33 @@
 <?php
 
-namespace Gzhegow\Front\Core\AssetManager\LocalResolver;
+namespace Gzhegow\Front\Core\AssetManager\ResolverLocal;
 
 use Gzhegow\Lib\Lib;
 use Gzhegow\Front\Core\Struct\Folder;
 use Gzhegow\Front\Exception\RuntimeException;
+use Gzhegow\Front\Package\League\Plates\Template\Template;
 
 
-class FrontDefaultAssetLocalResolver extends AbstractFrontAssetLocalResolver
+class FrontDefaultAssetResolverLocal extends AbstractFrontAssetResolverLocal
 {
     /**
      * @return array{
-     *     key: string,
+     *     input: string,
      *     folder: Folder,
      *     realpath: string,
      *     src: string,
-     *     version: string,
-     *     uri: string,
      * }
      */
-    public function resolve(
-        string $key,
-        ?string $directoryCurrent = null,
-        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
-    ) : array
+    public function resolve(string $input, Template $template) : array
     {
         $theFs = Lib::fs();
         $thePhp = Lib::php();
         $theType = Lib::type();
-        $theUrl = Lib::url();
 
-        $keyNormalized = $theType->path_normalized($key)->orThrow();
+        $inputNormalized = $theType->path_normalized($input)->orThrow();
 
-        $srcFolder = null;
-        $srcFolderRealpath = null;
-        $srcFolderPublicPath = null;
-        if ( '/' === $keyNormalized[0] ) {
-            if ( null === $folderRoot ) {
-                throw new RuntimeException(
-                    [ 'The `folderRoot` is empty', $folderRoot ]
-                );
-            }
+        if ( '/' === $inputNormalized[0] ) {
+            $folderRoot = $template->folderRoot();
 
             if ( ! $folderRoot->hasPublicPath($folderRootPublicPath) ) {
                 throw new RuntimeException(
@@ -53,10 +40,10 @@ class FrontDefaultAssetLocalResolver extends AbstractFrontAssetLocalResolver
             $srcFolderPublicPath = $folderRootPublicPath;
 
         } else {
-            $split = explode('::', $keyNormalized, 2);
+            $split = explode('::', $inputNormalized, 2);
 
             if ( count($split) > 1 ) {
-                [ $folderAlias, $keyNormalized ] = $split;
+                [ $folderAlias, $inputNormalized ] = $split;
 
                 if ( ! isset($this->frontStore->foldersByAlias[$folderAlias]) ) {
                     throw new RuntimeException(
@@ -68,7 +55,7 @@ class FrontDefaultAssetLocalResolver extends AbstractFrontAssetLocalResolver
 
                 if ( ! $folder->hasPublicPath($folderPublicPath) ) {
                     throw new RuntimeException(
-                        [ 'The `folder` has no `publicPath`', $folderCurrent ]
+                        [ 'The `folder` has no `publicPath`', $folder ]
                     );
                 }
 
@@ -77,11 +64,10 @@ class FrontDefaultAssetLocalResolver extends AbstractFrontAssetLocalResolver
                 $srcFolderPublicPath = $folderPublicPath;
 
             } else {
-                if ( null === $folderCurrent ) {
-                    throw new RuntimeException(
-                        [ 'The `folderCurrent` is empty', $folderCurrent ]
-                    );
-                }
+                $directoryCurrent = $template->dir();
+                $directoryCurrentRealpath = $theType->dirpath_realpath($directoryCurrent)->orThrow();
+
+                $folderCurrent = $template->folder();
 
                 if ( ! $folderCurrent->hasPublicPath($folderCurrentPublicPath) ) {
                     throw new RuntimeException(
@@ -93,48 +79,33 @@ class FrontDefaultAssetLocalResolver extends AbstractFrontAssetLocalResolver
                 $srcFolderRealpath = $folderCurrent->getDirectory();
                 $srcFolderPublicPath = $folderCurrentPublicPath;
 
-                if ( null !== $directoryCurrent ) {
-                    $directoryCurrentRealpath = $theType->dirpath_realpath($directoryCurrent)->orThrow();
+                $srcRealSubpath = str_replace($srcFolderRealpath, '', $directoryCurrentRealpath);
+                $srcPublicSubpath = $thePhp->path_normalize($srcRealSubpath);
 
-                    if ( 0 !== strpos($directoryCurrentRealpath, $srcFolderRealpath) ) {
-                        throw new RuntimeException(
-                            [
-                                'The `directoryCurrent` is outside `folderCurrent`',
-                                //
-                                $directoryCurrent,
-                                $folderCurrent,
-                            ]
-                        );
-                    }
-
-                    $srcRealSubpath = str_replace($srcFolderRealpath, '', $directoryCurrentRealpath);
-                    $srcPublicSubpath = $thePhp->path_normalize($srcRealSubpath);
-
-                    $srcFolderRealpath = $theFs->path_join([ $srcFolderRealpath, $srcRealSubpath ]);
-                    $srcFolderPublicPath = $thePhp->path_join([ $srcFolderPublicPath, $srcPublicSubpath ]);
-                }
+                $srcFolderRealpath = $theFs->path_join([ $srcFolderRealpath, $srcRealSubpath ]);
+                $srcFolderPublicPath = $thePhp->path_join([ $srcFolderPublicPath, $srcPublicSubpath ]);
             }
         }
 
-        $srcFile = $theFs->path_join([ $srcFolderRealpath, $keyNormalized ]);
+        $srcFile = $theFs->path_join([ $srcFolderRealpath, $inputNormalized ]);
 
         $pi = $thePhp->pathinfo(
             $srcFile,
             null, null,
             0
             | _PHP_PATHINFO_DIRNAME
-            | _PHP_PATHINFO_EXTENSION
+            | _PHP_PATHINFO_EXTENSIONS
             | _PHP_PATHINFO_FNAME
         );
         $srcDir = $pi['dirname'];
-        $srcExtension = $pi['extension'];
         $srcFname = $pi['fname'];
+        $srcExtensions = $pi['extensions'];
 
         $srcFileList = [];
         $srcRealpathNew = null;
 
-        if ( isset($this->frontStore->assetExtensionsMap[$srcExtension]) ) {
-            foreach ( $this->frontStore->assetExtensionsMap[$srcExtension] as $extTo => $bool ) {
+        if ( isset($this->frontStore->assetExtensionsMap[$srcExtensions]) ) {
+            foreach ( $this->frontStore->assetExtensionsMap[$srcExtensions] as $extTo => $bool ) {
                 $srcFileExtTo = $thePhp->path_join([ $srcDir, "{$srcFname}.{$extTo}" ]);
                 $srcFileList[$srcFileExtTo] = true;
 
@@ -168,24 +139,13 @@ class FrontDefaultAssetLocalResolver extends AbstractFrontAssetLocalResolver
             $srcRealpathNew = $srcRealpath;
         }
 
-        $src = $thePhp->path_join([ $srcFolderPublicPath, $keyNormalized ]);
-        $srcVersion = null
-            ?? $this->frontStore->assetVersion
-            ?? filemtime($srcRealpathNew)
-            ?: null;
-
-        $srcUri = $src;
-        if ( null !== $srcVersion ) {
-            $srcUri = $theUrl->uri($src, [ 'v' => $srcVersion ]);
-        }
+        $src = $thePhp->path_join([ $srcFolderPublicPath, $inputNormalized ]);
 
         $resolved = [
-            'key'      => $keyNormalized,
+            'key'      => $inputNormalized,
             'folder'   => $srcFolder,
             'realpath' => $srcRealpathNew,
             'src'      => $src,
-            'version'  => $srcVersion,
-            'uri'      => $srcUri,
         ];
 
         return $resolved;

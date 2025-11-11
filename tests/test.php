@@ -79,23 +79,52 @@ $config->configure(
         //
         // > можно задать расширения для проверки - например, если изображения минифицируются вручную
         $config->assetExtensionsMap = [
-            'gif'  => [
-                'min.gif' => true,
-                'gif'     => true,
+            'gif'       => [
+                'min.gif.webp' => true,
+                'gif.webp'     => true,
+                'min.gif'      => true,
+                'gif'          => true,
             ],
-            'jpeg' => [
-                'min.jpeg.webp' => true,
-                'jpeg.webp'     => true,
-                'min.jpeg'      => true,
-                'jpeg'          => true,
+            'gif.webp'  => [
+                'min.gif.webp' => true,
+                'gif.webp'     => true,
+                'min.gif'      => true,
+                'gif'          => true,
             ],
-            'jpg'  => [
+            //
+            'jpg'       => [
                 'min.jpg.webp' => true,
                 'jpg.webp'     => true,
                 'min.jpg'      => true,
                 'jpg'          => true,
             ],
-            'png'  => [
+            'jpg.webp'  => [
+                'min.jpg.webp' => true,
+                'jpg.webp'     => true,
+                'min.jpg'      => true,
+                'jpg'          => true,
+            ],
+            //
+            'jpeg'      => [
+                'min.jpeg.webp' => true,
+                'jpeg.webp'     => true,
+                'min.jpeg'      => true,
+                'jpeg'          => true,
+            ],
+            'jpeg.webp' => [
+                'min.jpeg.webp' => true,
+                'jpeg.webp'     => true,
+                'min.jpeg'      => true,
+                'jpeg'          => true,
+            ],
+            //
+            'png'       => [
+                'min.png.webp' => true,
+                'png.webp'     => true,
+                'min.png'      => true,
+                'png'          => true,
+            ],
+            'png.webp'  => [
                 'min.png.webp' => true,
                 'png.webp'     => true,
                 'min.png'      => true,
@@ -137,7 +166,7 @@ $front->folderAdd([ $alias = '@html', $directory = __DIR__ . '/disc/html', $publ
 // $front->folderAdd([ '@sections', __DIR__ . '/disc/html/sections', '/disc/html/sections', $publicPath = null ]);
 
 // > можно добавить `templateResolver`, чтобы, например, подключить языковые шаблоны или искать шаблон в нескольких папках
-$front->templateResolver(new \Gzhegow\Front\Core\TemplateResolver\FrontI18nTemplateResolver());
+$front->templateResolverSet(new \Gzhegow\Front\Core\TemplateResolver\FrontI18nTemplateResolver());
 // $front->templateResolverSet(new \Gzhegow\Front\Core\TemplateResolver\DefaultTemplateResolver());
 // $front->templateResolverSet(new \Gzhegow\Front\Core\TemplateResolver\CallableTemplateResolver(
 //     function (\League\Plates\Template\Name $name) { },
@@ -152,7 +181,7 @@ $front->fnTemplateGetItem(
     ) {
         $data = $template->getData();
 
-        return $data[ $name ] ?? null;
+        return $data[$name] ?? null;
     }
 );
 
@@ -169,11 +198,11 @@ $front->fnTemplateCatchError(
     }
 );
 
-// > можно добавить `assetLocalResolver`, чтобы, проверять несколько файлов перед формированием src или добавлять параметр версии
-$front->assetLocalResolver(new \Gzhegow\Front\Core\AssetManager\LocalResolver\FrontDefaultAssetLocalResolver());
+// > можно добавить `assetLocalResolver`, чтобы, проверять несколько файлов перед выводом src и/или добавлять параметр версии
+$front->assetResolverLocalSet(new \Gzhegow\Front\Core\AssetManager\ResolverLocal\FrontDefaultAssetResolverLocal());
 
-// > можно добавить `assetRemoteResolver`, чтобы, проверять несколько файлов перед формированием src или добавлять параметр версии
-$front->assetRemoteResolver(new \Gzhegow\Front\Core\AssetManager\RemoteResolver\FrontDefaultAssetRemoteResolver());
+// > можно добавить `assetRemoteResolver`, чтобы, проверять несколько файлов перед выводом src и/или добавлять параметр версии
+$front->assetResolverRemoteSet(new \Gzhegow\Front\Core\AssetManager\ResolverRemote\FrontDefaultAssetResolverRemote());
 
 // > создаем фасад, если удобно пользоваться статикой
 \Gzhegow\Front\Front::setFacade($front);
@@ -188,13 +217,13 @@ $fn = function () use ($ffn, $front) {
     $ffn->print('TEST 1');
     echo "\n";
 
-    $beforeDefault = $front->templateLangDefault(false);
-    $beforeCurrent = $front->templateLangCurrent(false);
+    $beforeDefault = $front->templateLangDefaultSet(false);
+    $beforeCurrent = $front->templateLangCurrentSet(false);
 
     $ffn->print($front->render('@html::pages/demo/page.demo.phtml'));
 
-    $front->templateLangCurrent($beforeCurrent);
-    $front->templateLangDefault($beforeDefault);
+    $front->templateLangCurrentSet($beforeCurrent);
+    $front->templateLangDefaultSet($beforeDefault);
 };
 $test = $ffn->test($fn);
 $test->expectStdout('
@@ -225,21 +254,21 @@ $fn = function () use ($ffn, $front) {
     $ffn->print('TEST 2');
     echo "\n";
 
-    $before = $front->templateLangDefault('ru');
+    $before = $front->templateLangDefaultSet('ru');
 
-    $front->templateLangCurrent('ru');
+    $front->templateLangCurrentSet('ru');
     $ffn->print($front->render('@html::pages/demo/page.demo.phtml'));
     echo "\n";
 
-    $front->templateLangCurrent('en');
+    $front->templateLangCurrentSet('en');
     $ffn->print($front->render('@html::pages/demo/page.demo'));
     echo "\n";
 
     // > будет использован `default`, то есть `ru`
-    $front->templateLangCurrent('unknown');
+    $front->templateLangCurrentSet('unknown');
     $ffn->print($front->render('@html::pages/demo/page.demo'));
 
-    $front->templateLangDefault($before);
+    $front->templateLangDefaultSet($before);
 };
 $test = $ffn->test($fn);
 $test->expectStdout('

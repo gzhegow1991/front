@@ -1,11 +1,11 @@
 <?php
 
-namespace Gzhegow\Front\Core\AssetManager\RemoteResolver;
+namespace Gzhegow\Front\Core\AssetManager\ResolverLocal;
 
 use Gzhegow\Front\Core\Store\FrontStore;
 
 
-abstract class AbstractFrontAssetRemoteResolver implements FrontAssetRemoteResolverInterface
+abstract class AbstractFrontAssetResolverLocal implements FrontAssetResolverLocalInterface
 {
     /**
      * @var FrontStore

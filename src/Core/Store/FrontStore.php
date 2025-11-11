@@ -64,11 +64,11 @@ class FrontStore
     public $appNameFull;
 
     /**
-     * @var string|null
-     */
-    public $assetVersion;
-    /**
      * @var array<string, array<string, bool>>
      */
     public $assetExtensionsMap = [];
+    /**
+     * @var string|null
+     */
+    public $assetVersion;
 }

@@ -61,29 +61,13 @@ interface TemplateInterface
      *     uri: string,
      * }
      */
-    public function assetLocal(
-        string $key,
-        ?string $directoryCurrent = null,
-        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
-    ) : array;
+    public function assetLocal(string $input) : array;
 
-    public function assetLocalRealpath(
-        string $key,
-        ?string $directoryCurrent = null,
-        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
-    ) : string;
+    public function assetLocalRealpath(string $input) : string;
 
-    public function assetLocalSrc(
-        string $key,
-        ?string $directoryCurrent = null,
-        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
-    ) : string;
+    public function assetLocalSrc(string $input) : string;
 
-    public function assetLocalUri(
-        string $key,
-        ?string $directoryCurrent = null,
-        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
-    ) : string;
+    public function assetLocalUri(string $input) : string;
 
 
     /**
@@ -95,20 +79,11 @@ interface TemplateInterface
      *     uri: string,
      * }
      */
-    public function assetRemote(
-        string $key,
-        ?Remote $remoteCurrent = null
-    ) : array;
+    public function assetRemote(string $input) : array;
 
-    public function assetRemoteSrc(
-        string $key,
-        ?Remote $remoteCurrent = null
-    ) : string;
+    public function assetRemoteSrc(string $input) : string;
 
-    public function assetRemoteUri(
-        string $key,
-        ?Remote $remoteCurrent = null
-    ) : string;
+    public function assetRemoteUri(string $input) : string;
 
 
     public function getTagManager() : FrontTagManagerInterface;

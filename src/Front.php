@@ -7,8 +7,8 @@ use Gzhegow\Front\Core\Struct\Remote;
 use Gzhegow\Front\Core\Store\FrontStore;
 use Gzhegow\Front\Core\TemplateResolver\FrontTemplateResolverInterface;
 use Gzhegow\Front\Package\League\Plates\EngineInterface as PlatesEngineInterface;
-use Gzhegow\Front\Core\AssetManager\LocalResolver\FrontAssetLocalResolverInterface;
-use Gzhegow\Front\Core\AssetManager\RemoteResolver\FrontAssetRemoteResolverInterface;
+use Gzhegow\Front\Core\AssetManager\ResolverLocal\FrontAssetResolverLocalInterface;
+use Gzhegow\Front\Core\AssetManager\ResolverRemote\FrontAssetResolverRemoteInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface as PlatesTemplateInterface;
 
 
@@ -45,24 +45,24 @@ class Front
     }
 
 
-    public static function getFolders() : array
+    public static function folders() : array
     {
-        return static::$facade->getFolders();
+        return static::$facade->folders();
     }
 
-    public static function getFolder(int $id) : Folder
+    public static function folderGet(int $id) : Folder
     {
-        return static::$facade->getFolder($id);
+        return static::$facade->folderGet($id);
     }
 
-    public static function getFolderByAlias(string $alias) : Folder
+    public static function folderByAliasGet(string $alias) : Folder
     {
-        return static::$facade->getFolderByAlias($alias);
+        return static::$facade->folderByAliasGet($alias);
     }
 
-    public static function getFolderByDirectory(string $directory) : Folder
+    public static function folderByDirectoryGet(string $directory) : Folder
     {
-        return static::$facade->getFolderByDirectory($directory);
+        return static::$facade->folderByDirectoryGet($directory);
     }
 
     public static function folderAdd($folder) : int
@@ -71,19 +71,19 @@ class Front
     }
 
 
-    public static function getRemotes() : array
+    public static function remotes() : array
     {
-        return static::$facade->getRemotes();
+        return static::$facade->remotes();
     }
 
-    public static function getRemote(int $id) : Remote
+    public static function remoteGet(int $id) : Remote
     {
-        return static::$facade->getRemote($id);
+        return static::$facade->remoteGet($id);
     }
 
-    public static function getRemoteByAlias(string $alias) : Remote
+    public static function remoteByAliasGet(string $alias) : Remote
     {
-        return static::$facade->getRemoteByAlias($alias);
+        return static::$facade->remoteByAliasGet($alias);
     }
 
     public static function remoteAdd($remote) : int
@@ -103,9 +103,9 @@ class Front
     }
 
 
-    public static function templateResolver($templateResolver) : ?FrontTemplateResolverInterface
+    public static function templateResolverSet($templateResolver) : ?FrontTemplateResolverInterface
     {
-        return static::$facade->templateResolver($templateResolver);
+        return static::$facade->templateResolverSet($templateResolver);
     }
 
 
@@ -124,11 +124,6 @@ class Front
         return static::$facade->templateDir($name);
     }
 
-    public static function templateFolder($name) : Folder
-    {
-        return static::$facade->templateFolder($name);
-    }
-
     public static function templatePath($name) : string
     {
         return static::$facade->templatePath($name);
@@ -139,15 +134,20 @@ class Front
         return static::$facade->templateRelpath($name);
     }
 
+    public static function templateFolder($name) : Folder
+    {
+        return static::$facade->templateFolder($name);
+    }
+
 
     public static function templateLangCurrentSet($langCurrent) : ?string
     {
-        return static::$facade->templateLangCurrent($langCurrent);
+        return static::$facade->templateLangCurrentSet($langCurrent);
     }
 
     public static function templateLangDefaultSet($langDefault) : ?string
     {
-        return static::$facade->templateLangDefault($langDefault);
+        return static::$facade->templateLangDefaultSet($langDefault);
     }
 
 
@@ -179,14 +179,14 @@ class Front
     }
 
 
-    public static function assetLocalResolver($assetLocalResolver) : ?FrontAssetLocalResolverInterface
+    public static function assetResolverLocalSet($assetResolverLocal) : ?FrontAssetResolverLocalInterface
     {
-        return static::$facade->assetLocalResolver($assetLocalResolver);
+        return static::$facade->assetResolverLocalSet($assetResolverLocal);
     }
 
-    public static function assetRemoteResolver($assetRemoteResolver) : ?FrontAssetRemoteResolverInterface
+    public static function assetResolverRemoteSet($assetResolverRemote) : ?FrontAssetResolverRemoteInterface
     {
-        return static::$facade->assetRemoteResolver($assetRemoteResolver);
+        return static::$facade->assetResolverRemoteSet($assetResolverRemote);
     }
 
 

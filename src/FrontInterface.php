@@ -7,8 +7,8 @@ use Gzhegow\Front\Core\Struct\Folder;
 use Gzhegow\Front\Core\Store\FrontStore;
 use Gzhegow\Front\Core\TemplateResolver\FrontTemplateResolverInterface;
 use Gzhegow\Front\Package\League\Plates\EngineInterface as PlatesEngineInterface;
-use Gzhegow\Front\Core\AssetManager\LocalResolver\FrontAssetLocalResolverInterface;
-use Gzhegow\Front\Core\AssetManager\RemoteResolver\FrontAssetRemoteResolverInterface;
+use Gzhegow\Front\Core\AssetManager\ResolverLocal\FrontAssetResolverLocalInterface;
+use Gzhegow\Front\Core\AssetManager\ResolverRemote\FrontAssetResolverRemoteInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface as PlatesTemplateInterface;
 
 
@@ -30,13 +30,13 @@ interface FrontInterface
     /**
      * @return Folder[]
      */
-    public function getFolders() : array;
+    public function folders() : array;
 
-    public function getFolder(int $id) : Folder;
+    public function folderGet(int $id) : Folder;
 
-    public function getFolderByAlias(string $alias) : Folder;
+    public function folderByAliasGet(string $alias) : Folder;
 
-    public function getFolderByDirectory(string $directory) : Folder;
+    public function folderByDirectoryGet(string $directory) : Folder;
 
     /**
      * @param Folder|array $folder
@@ -47,11 +47,11 @@ interface FrontInterface
     /**
      * @return Remote[]
      */
-    public function getRemotes() : array;
+    public function remotes() : array;
 
-    public function getRemote(int $id) : Remote;
+    public function remoteGet(int $id) : Remote;
 
-    public function getRemoteByAlias(string $alias) : Remote;
+    public function remoteByAliasGet(string $alias) : Remote;
 
     /**
      * @param Remote|array $remote
@@ -70,7 +70,7 @@ interface FrontInterface
     /**
      * @param FrontTemplateResolverInterface|false|null $templateResolver
      */
-    public function templateResolver($templateResolver = null) : ?FrontTemplateResolverInterface;
+    public function templateResolverSet($templateResolver = null) : ?FrontTemplateResolverInterface;
 
 
     public function templateExists($name) : bool;
@@ -89,17 +89,12 @@ interface FrontInterface
     /**
      * @param string|false|null $langCurrent
      */
-    public function templateLangCurrent($langCurrent) : ?string;
+    public function templateLangCurrentSet($langCurrent) : ?string;
 
     /**
      * @param string|false|null $langDefault
      */
-    public function templateLangDefault($langDefault) : ?string;
-
-
-    public function make($name, array $data = []) : PlatesTemplateInterface;
-
-    public function render($name, array $data = []) : string;
+    public function templateLangDefaultSet($langDefault) : ?string;
 
 
     /**
@@ -114,12 +109,17 @@ interface FrontInterface
 
 
     /**
-     * @param FrontAssetLocalResolverInterface|false|null $assetLocalResolver
+     * @param FrontAssetResolverLocalInterface|false|null $assetLocalResolver
      */
-    public function assetLocalResolver($assetLocalResolver = null) : ?FrontAssetLocalResolverInterface;
+    public function assetResolverLocalSet($assetLocalResolver = null) : ?FrontAssetResolverLocalInterface;
 
     /**
-     * @param FrontAssetRemoteResolverInterface|false|null $assetRemoteResolver
+     * @param FrontAssetResolverRemoteInterface|false|null $assetRemoteResolver
      */
-    public function assetRemoteResolver($assetRemoteResolver = null) : ?FrontAssetRemoteResolverInterface;
+    public function assetResolverRemoteSet($assetRemoteResolver = null) : ?FrontAssetResolverRemoteInterface;
+
+
+    public function make($name, array $data = []) : PlatesTemplateInterface;
+
+    public function render($name, array $data = []) : string;
 }

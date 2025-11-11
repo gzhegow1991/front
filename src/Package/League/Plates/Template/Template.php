@@ -4,9 +4,9 @@ namespace Gzhegow\Front\Package\League\Plates\Template;
 
 use Gzhegow\Lib\Lib;
 use Gzhegow\Front\Front;
-use Gzhegow\Front\Core\Store\FrontStore;
 use Gzhegow\Front\Core\Struct\Folder;
 use Gzhegow\Front\Core\Struct\Remote;
+use Gzhegow\Front\Core\Store\FrontStore;
 use Gzhegow\Lib\Exception\LogicException;
 use Gzhegow\Front\Exception\RuntimeException;
 use Gzhegow\Front\Package\League\Plates\Engine;
@@ -18,6 +18,19 @@ use Gzhegow\Front\Package\League\Plates\EngineInterface as PlatesEngineInterface
 
 class Template extends LeagueTemplate implements TemplateInterface
 {
+    const SECTION_BRACES = [ '<!-- {{ __', '__ }} -->' ];
+
+    const SECTION_CONTENT = 'content';
+    const SECTION_CSS     = 'css';
+    const SECTION_JS      = 'js';
+
+    const LIST_SECTION = [
+        self::SECTION_CONTENT => true,
+        self::SECTION_CSS     => true,
+        self::SECTION_JS      => true,
+    ];
+
+
     /**
      * @var FrontAssetManagerInterface
      */
@@ -47,9 +60,9 @@ class Template extends LeagueTemplate implements TemplateInterface
      * @var array
      */
     protected $sections = [
-        'content' => '',
-        'css'     => '',
-        'js'      => '',
+        self::SECTION_CONTENT => '',
+        self::SECTION_CSS     => '',
+        self::SECTION_JS      => '',
     ];
     /**
      * @var string
@@ -86,11 +99,56 @@ class Template extends LeagueTemplate implements TemplateInterface
         return $this->name->getName();
     }
 
+    public function path() : string
+    {
+        /** @see parent::path() */
+
+        if ( null !== $this->pathResolved ) {
+            return $this->pathResolved;
+        }
+
+        $resolveTemplatePathInvokableObject = $this->engine->getResolveTemplatePath();
+
+        try {
+            $pathResolved = call_user_func_array(
+                $resolveTemplatePathInvokableObject,
+                [ $this->name ]
+            );
+        }
+        catch ( \Throwable $e ) {
+            throw new RuntimeException($e);
+        }
+
+        $fileRealpath = realpath($pathResolved);
+
+        return $this->pathResolved = $fileRealpath;
+    }
+
+    public function relpath() : string
+    {
+        $theFs = Lib::php();
+
+        $file = $this->path();
+        $directory = $this->engine->getDirectory();
+
+        $fileRelpath = $theFs->path_relative($file, $directory);
+
+        return $fileRelpath;
+    }
+
     public function dir() : string
     {
         $file = $this->path();
 
-        return realpath(dirname($file));
+        $dirRealpath = realpath(dirname($file));
+
+        return $dirRealpath;
+    }
+
+
+    public function folderRoot() : Folder
+    {
+        return $this->frontStore->foldersByAlias[Front::ROOT_FOLDER_ALIAS];
     }
 
     public function folder() : Folder
@@ -126,41 +184,6 @@ class Template extends LeagueTemplate implements TemplateInterface
         $folder = end($match);
 
         return $folder;
-    }
-
-    public function path() : string
-    {
-        /** @see parent::path() */
-
-        if ( null !== $this->pathResolved ) {
-            return $this->pathResolved;
-        }
-
-        $resolveTemplatePathInvokableObject = $this->engine->getResolveTemplatePath();
-
-        try {
-            $pathResolved = call_user_func_array(
-                $resolveTemplatePathInvokableObject,
-                [ $this->name ]
-            );
-        }
-        catch ( \Throwable $e ) {
-            throw new RuntimeException($e);
-        }
-
-        $fileRealpath = realpath($pathResolved);
-
-        return $this->pathResolved = $fileRealpath;
-    }
-
-    public function relpath() : string
-    {
-        $theFs = Lib::php();
-
-        $file = $this->path();
-        $directory = $this->engine->getDirectory();
-
-        return $theFs->path_relative($file, $directory);
     }
 
 
@@ -208,7 +231,9 @@ class Template extends LeagueTemplate implements TemplateInterface
                 extract($this->data);
 
                 include func_get_arg(0);
-            })($this->path());
+            })(
+                $this->path()
+            );
 
             $content = ob_get_clean();
         }
@@ -225,15 +250,22 @@ class Template extends LeagueTemplate implements TemplateInterface
                         [ $e, $content, $this ]
                     );
                 }
-                catch ( \RuntimeException $e ) {
-                    throw $e;
-                }
                 catch ( \Throwable $e ) {
                     throw new RuntimeException($e);
                 }
 
             } else {
                 throw new RuntimeException($e);
+            }
+        }
+
+        if ( [] !== $this->sections ) {
+            foreach ( array_keys($this->sections) as $name ) {
+                $content = str_replace(
+                    static::SECTION_BRACES[0] . $name . static::SECTION_BRACES[1],
+                    $this->sections[$name],
+                    $content
+                );
             }
         }
 
@@ -291,15 +323,12 @@ class Template extends LeagueTemplate implements TemplateInterface
         $dataTotal = $dataTotal + $this->data;
 
         $template = $this->engine->make($name, $dataTotal);
+        $template->sections =& $this->sections;
         $template->css =& $this->css;
         $template->js =& $this->js;
-        $template->sections =& $this->sections;
 
         try {
             $html = $template->render();
-        }
-        catch ( \RuntimeException $e ) {
-            throw $e;
         }
         catch ( \Throwable $e ) {
             throw new RuntimeException($e);
@@ -311,71 +340,61 @@ class Template extends LeagueTemplate implements TemplateInterface
 
     /**
      * @deprecated
-     * @internal
      */
     public function start($name)
     {
-        if ( in_array($name, [ 'content', 'css', 'js' ]) ) {
-            throw new LogicException(
-                [ 'The section name is reserved: ' . $name, $name ]
-            );
-        }
-
-        if ( $this->sectionName ) {
-            throw new LogicException(
-                [ 'You cannot nest sections within other sections.' ]
-            );
-        }
-
-        $this->sectionName = $name;
-
-        ob_start();
+        $this->_sectionStart($name);
 
         return $this;
     }
 
     /**
      * @deprecated
-     * @internal
      */
     public function push($name)
     {
-        parent::push($name);
+        $this->_sectionPush($name);
 
         return $this;
     }
 
     /**
      * @deprecated
-     * @internal
      */
     public function unshift($name)
     {
-        parent::unshift($name);
+        $this->_sectionUnshift($name);
 
         return $this;
     }
 
     /**
      * @deprecated
-     * @internal
      */
     public function stop()
     {
-        parent::stop();
+        $this->_sectionEnd();
 
         return $this;
     }
 
     /**
      * @deprecated
-     * @internal
      */
     public function end()
     {
-        parent::end();
+        $this->_sectionEnd();
 
         return $this;
+    }
+
+    public function section($name, $default = null)
+    {
+        if ( ! isset($this->sections[$name]) ) {
+            return $default;
+        }
+
+        return static::SECTION_BRACES[0] . $name . static::SECTION_BRACES[1];
     }
 
     public function sectionStart($name) : TemplateInterface
@@ -386,35 +405,76 @@ class Template extends LeagueTemplate implements TemplateInterface
             );
         }
 
-        $this->start($name);
+        $this->_sectionStart($name);
 
         return $this;
     }
 
     public function sectionPush($name) : TemplateInterface
     {
-        $this->push($name);
+        $this->_sectionPush($name);
 
         return $this;
     }
 
     public function sectionUnshift($name) : TemplateInterface
     {
-        $this->unshift($name);
-
-        return $this;
-    }
-
-    public function sectionStop() : TemplateInterface
-    {
-        $this->stop();
+        $this->_sectionUnshift($name);
 
         return $this;
     }
 
     public function sectionEnd() : TemplateInterface
     {
-        $this->end();
+        $this->_sectionEnd();
+
+        return $this;
+    }
+
+    protected function _sectionStart($name)
+    {
+        if ( isset(static::LIST_SECTION[$name]) ) {
+            throw new LogicException(
+                [
+                    ''
+                    . 'The section names is reserved: '
+                    . '[ ' . implode(' ][ ', array_keys(static::LIST_SECTION)) . ' ]',
+                    //
+                    $name,
+                ]
+            );
+        }
+
+        if ( $this->sectionName ) {
+            throw new LogicException(
+                [ 'You cannot nest sections within other sections.', $name, $this->sectionName ]
+            );
+        }
+
+        $this->sectionName = $name;
+
+        ob_start();
+
+        return $this;
+    }
+
+    protected function _sectionPush($name)
+    {
+        parent::push($name);
+
+        return $this;
+    }
+
+    protected function _sectionUnshift($name)
+    {
+        parent::unshift($name);
+
+        return $this;
+    }
+
+    protected function _sectionEnd()
+    {
+        parent::stop();
 
         return $this;
     }
@@ -457,7 +517,7 @@ class Template extends LeagueTemplate implements TemplateInterface
 
     public function content() : string
     {
-        return $this->sections['content'] ?? '';
+        return $this->sections['content'];
     }
 
 
@@ -468,7 +528,7 @@ class Template extends LeagueTemplate implements TemplateInterface
         if ( ! isset($this->css[$assetLocalUri]) ) {
             $htmlAttributes = $this->tagAttributes($attributes);
 
-            $this->sections['css'] .= "<link rel=\"stylesheet\" href=\"{$assetLocalUri}\" {$htmlAttributes} />\n";
+            $this->sections[static::SECTION_CSS] .= "<link rel=\"stylesheet\" href=\"{$assetLocalUri}\" {$htmlAttributes} />\n";
 
             $this->css[$assetLocalUri] = true;
         }
@@ -483,7 +543,7 @@ class Template extends LeagueTemplate implements TemplateInterface
         if ( ! isset($this->css[$assetRemoteUri]) ) {
             $htmlAttributes = $this->tagAttributes($attributes);
 
-            $this->sections['css'] .= "<link rel=\"stylesheet\" href=\"{$assetRemoteUri}\" {$htmlAttributes} />\n";
+            $this->sections[static::SECTION_CSS] .= "<link rel=\"stylesheet\" href=\"{$assetRemoteUri}\" {$htmlAttributes} />\n";
 
             $this->css[$assetRemoteUri] = true;
         }
@@ -498,7 +558,7 @@ class Template extends LeagueTemplate implements TemplateInterface
         if ( ! isset($this->js[$assetLocalUri]) ) {
             $htmlAttributes = $this->tagAttributes($attributes);
 
-            $this->sections['js'] .= "<script src=\"{$assetLocalUri}\" {$htmlAttributes}></script>\n";
+            $this->sections[static::SECTION_JS] .= "<script src=\"{$assetLocalUri}\" {$htmlAttributes}></script>\n";
 
             $this->js[$assetLocalUri] = true;
         }
@@ -513,7 +573,7 @@ class Template extends LeagueTemplate implements TemplateInterface
         if ( ! isset($this->js[$assetRemoteUri]) ) {
             $htmlAttributes = $this->tagAttributes($attributes);
 
-            $this->sections['js'] .= "<script src=\"{$assetRemoteUri}\" {$htmlAttributes}></script>\n";
+            $this->sections[static::SECTION_JS] .= "<script src=\"{$assetRemoteUri}\" {$htmlAttributes}></script>\n";
 
             $this->js[$assetRemoteUri] = true;
         }
@@ -537,65 +597,30 @@ class Template extends LeagueTemplate implements TemplateInterface
      *     uri: string,
      * }
      */
-    public function assetLocal(
-        string $key,
-        ?string $directoryCurrent = null,
-        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
-    ) : array
+    public function assetLocal(string $input) : array
     {
-        $directoryCurrent = $directoryCurrent ?? $this->dir();
+        $resolved = $this->frontAssetManager->resolveLocal($input, $this);
 
-        $folderRoot = $folderRoot ?? $this->frontStore->foldersByAlias[Front::ROOT_FOLDER_ALIAS] ?? null;
-        $folderCurrent = $folderCurrent ?? $this->folder();
-
-        return $this->frontAssetManager->resolveLocal(
-            $key,
-            $directoryCurrent,
-            $folderRoot, $folderCurrent
-        );
+        return $resolved;
     }
 
-    public function assetLocalRealpath(
-        string $key,
-        ?string $directoryCurrent = null,
-        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
-    ) : string
+    public function assetLocalRealpath(string $input) : string
     {
-        $resolved = $this->assetLocal(
-            $key,
-            $directoryCurrent,
-            $folderRoot, $folderCurrent
-        );
+        $resolved = $this->assetLocal($input);
 
         return $resolved['realpath'];
     }
 
-    public function assetLocalSrc(
-        string $key,
-        ?string $directoryCurrent = null,
-        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
-    ) : string
+    public function assetLocalSrc(string $input) : string
     {
-        $resolved = $this->assetLocal(
-            $key,
-            $directoryCurrent,
-            $folderRoot, $folderCurrent
-        );
+        $resolved = $this->assetLocal($input);
 
         return $resolved['src'];
     }
 
-    public function assetLocalUri(
-        string $key,
-        ?string $directoryCurrent = null,
-        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
-    ) : string
+    public function assetLocalUri(string $input) : string
     {
-        $resolved = $this->assetLocal(
-            $key,
-            $directoryCurrent,
-            $folderRoot, $folderCurrent
-        );
+        $resolved = $this->assetLocal($input);
 
         return $resolved['uri'];
     }
@@ -610,39 +635,23 @@ class Template extends LeagueTemplate implements TemplateInterface
      *     uri: string,
      * }
      */
-    public function assetRemote(
-        string $key,
-        ?Remote $remoteCurrent = null
-    ) : array
+    public function assetRemote(string $input) : array
     {
-        return $this->frontAssetManager->resolveRemote(
-            $key,
-            $remoteCurrent
-        );
+        $resolved = $this->frontAssetManager->resolveRemote($input, $this);
+
+        return $resolved;
     }
 
-    public function assetRemoteSrc(
-        string $key,
-        ?Remote $remoteCurrent = null
-    ) : string
+    public function assetRemoteSrc(string $input) : string
     {
-        $resolved = $this->frontAssetManager->resolveRemote(
-            $key,
-            $remoteCurrent
-        );
+        $resolved = $this->assetRemote($input);
 
         return $resolved['src'];
     }
 
-    public function assetRemoteUri(
-        string $key,
-        ?Remote $remoteCurrent = null
-    ) : string
+    public function assetRemoteUri(string $input) : string
     {
-        $resolved = $this->frontAssetManager->resolveRemote(
-            $key,
-            $remoteCurrent
-        );
+        $resolved = $this->assetRemote($input);
 
         return $resolved['uri'];
     }

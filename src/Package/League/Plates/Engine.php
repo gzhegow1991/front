@@ -10,9 +10,7 @@ use League\Plates\Template\ResolveTemplatePath;
 use Gzhegow\Front\Core\TagManager\FrontTagManagerInterface;
 use Gzhegow\Front\Core\AssetManager\FrontAssetManagerInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface;
-use Gzhegow\Front\Core\TemplateResolver\FrontTemplateResolverInterface;
 use League\Plates\Template\ResolveTemplatePath\NameAndFolderResolveTemplatePath;
-use Gzhegow\Front\Package\League\Plates\Template\ResolveTemplatePath\TemplateResolverResolveTemplatePath;
 
 
 class Engine extends LeagueEngine implements EngineInterface
@@ -103,39 +101,6 @@ class Engine extends LeagueEngine implements EngineInterface
     }
 
 
-    public function make($name, array $data = []) : TemplateInterface
-    {
-        $template = $this->factory->newPlatesTemplate(
-            $this->assetManager,
-            $this->tagManager,
-            //
-            $this->store,
-            //
-            $this,
-            //
-            $name
-        );
-
-        $template->data($data);
-
-        return $template;
-    }
-
-    public function render($name, array $data = []) : string
-    {
-        $template = $this->make($name, $data);
-
-        try {
-            $html = $template->render();
-        }
-        catch ( \Throwable $e ) {
-            throw new RuntimeException($e);
-        }
-
-        return $html;
-    }
-
-
     /**
      * @param callable|false|null $fnTemplateGetItem
      */
@@ -170,5 +135,38 @@ class Engine extends LeagueEngine implements EngineInterface
         $this->fnTemplateCatchError = $fnTemplateCatchError;
 
         return $last;
+    }
+
+
+    public function make($name, array $data = []) : TemplateInterface
+    {
+        $template = $this->factory->newPlatesTemplate(
+            $this->assetManager,
+            $this->tagManager,
+            //
+            $this->store,
+            //
+            $this,
+            //
+            $name
+        );
+
+        $template->data($data);
+
+        return $template;
+    }
+
+    public function render($name, array $data = []) : string
+    {
+        $template = $this->make($name, $data);
+
+        try {
+            $html = $template->render();
+        }
+        catch ( \Throwable $e ) {
+            throw new RuntimeException($e);
+        }
+
+        return $html;
     }
 }

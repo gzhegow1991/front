@@ -5,8 +5,9 @@ namespace Gzhegow\Front\Core\AssetManager;
 use Gzhegow\Front\FrontInterface;
 use Gzhegow\Front\Core\Struct\Folder;
 use Gzhegow\Front\Core\Struct\Remote;
-use Gzhegow\Front\Core\AssetManager\LocalResolver\FrontAssetLocalResolverInterface;
-use Gzhegow\Front\Core\AssetManager\RemoteResolver\FrontAssetRemoteResolverInterface;
+use Gzhegow\Front\Package\League\Plates\Template\Template;
+use Gzhegow\Front\Core\AssetManager\ResolverLocal\FrontAssetResolverLocalInterface;
+use Gzhegow\Front\Core\AssetManager\ResolverRemote\FrontAssetResolverRemoteInterface;
 
 
 interface FrontAssetManagerInterface
@@ -15,9 +16,9 @@ interface FrontAssetManagerInterface
 
 
     /**
-     * @param FrontAssetLocalResolverInterface|false|null $localResolver
+     * @param FrontAssetResolverLocalInterface|false|null $resolverLocal
      */
-    public function localResolver($localResolver) : ?FrontAssetLocalResolverInterface;
+    public function resolverLocalSet($resolverLocal) : ?FrontAssetResolverLocalInterface;
 
     /**
      * @return array{
@@ -29,17 +30,13 @@ interface FrontAssetManagerInterface
      *     uri: string,
      * }
      */
-    public function resolveLocal(
-        string $key,
-        ?string $directoryCurrent = null,
-        ?Folder $folderRoot = null, ?Folder $folderCurrent = null
-    ) : array;
+    public function resolveLocal(string $input, Template $template) : array;
 
 
     /**
-     * @param FrontAssetRemoteResolverInterface|false|null $remoteResolver
+     * @param FrontAssetResolverRemoteInterface|false|null $resolverRemote
      */
-    public function remoteResolver($remoteResolver) : ?FrontAssetRemoteResolverInterface;
+    public function resolverRemoteSet($resolverRemote) : ?FrontAssetResolverRemoteInterface;
 
     /**
      * @return array{
@@ -50,8 +47,5 @@ interface FrontAssetManagerInterface
      *     uri: string,
      * }
      */
-    public function resolveRemote(
-        string $key,
-        ?Remote $remoteCurrent = null
-    ) : array;
+    public function resolveRemote(string $input, Template $template) : array;
 }

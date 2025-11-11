@@ -15,10 +15,10 @@ use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface;
 use Gzhegow\Front\Core\TemplateResolver\FrontDefaultTemplateResolver;
 use Gzhegow\Front\Core\TemplateResolver\FrontTemplateResolverInterface;
 use Gzhegow\Front\Package\League\Plates\EngineInterface as PlatesEngineInterface;
-use Gzhegow\Front\Core\AssetManager\LocalResolver\FrontDefaultAssetLocalResolver;
-use Gzhegow\Front\Core\AssetManager\LocalResolver\FrontAssetLocalResolverInterface;
-use Gzhegow\Front\Core\AssetManager\RemoteResolver\FrontDefaultAssetRemoteResolver;
-use Gzhegow\Front\Core\AssetManager\RemoteResolver\FrontAssetRemoteResolverInterface;
+use Gzhegow\Front\Core\AssetManager\ResolverLocal\FrontDefaultAssetResolverLocal;
+use Gzhegow\Front\Core\AssetManager\ResolverLocal\FrontAssetResolverLocalInterface;
+use Gzhegow\Front\Core\AssetManager\ResolverRemote\FrontDefaultAssetResolverRemote;
+use Gzhegow\Front\Core\AssetManager\ResolverRemote\FrontAssetResolverRemoteInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface as PlatesTemplateInterface;
 use Gzhegow\Front\Package\League\Plates\Template\ResolveTemplatePath\TemplateResolverResolveTemplatePath;
 
@@ -69,13 +69,13 @@ class FrontFacade implements FrontInterface
         FrontConfig $config,
         //
         ?FrontTemplateResolverInterface $templateResolver = null,
-        ?FrontAssetLocalResolverInterface $assetLocalResolver = null,
-        ?FrontAssetRemoteResolverInterface $assetRemoteResolver = null
+        ?FrontAssetResolverLocalInterface $assetLocalResolver = null,
+        ?FrontAssetResolverRemoteInterface $assetRemoteResolver = null
     )
     {
         $templateResolver = $templateResolver ?? new FrontDefaultTemplateResolver();
-        $assetLocalResolver = $assetLocalResolver ?? new FrontDefaultAssetLocalResolver();
-        $assetRemoteResolver = $assetRemoteResolver ?? new FrontDefaultAssetRemoteResolver();
+        $assetLocalResolver = $assetLocalResolver ?? new FrontDefaultAssetResolverLocal();
+        $assetRemoteResolver = $assetRemoteResolver ?? new FrontDefaultAssetResolverRemote();
 
         $this->factory = $factory;
 
@@ -113,9 +113,9 @@ class FrontFacade implements FrontInterface
 
         $this->initialize();
 
-        $this->templateResolver($templateResolver);
-        $this->assetLocalResolver($assetLocalResolver);
-        $this->assetRemoteResolver($assetRemoteResolver);
+        $this->templateResolverSet($templateResolver);
+        $this->assetResolverLocalSet($assetLocalResolver);
+        $this->assetResolverRemoteSet($assetRemoteResolver);
 
         $folderRoot = Folder::fromArray([
             'alias'       => Front::ROOT_FOLDER_ALIAS,
@@ -172,12 +172,12 @@ class FrontFacade implements FrontInterface
     /**
      * @return Folder[]
      */
-    public function getFolders() : array
+    public function folders() : array
     {
         return $this->store->folders;
     }
 
-    public function getFolder(int $id) : Folder
+    public function folderGet(int $id) : Folder
     {
         if ( ! isset($this->store->folders[$id]) ) {
             throw new RuntimeException(
@@ -188,7 +188,7 @@ class FrontFacade implements FrontInterface
         return $this->store->folders[$id];
     }
 
-    public function getFolderByAlias(string $alias) : Folder
+    public function folderByAliasGet(string $alias) : Folder
     {
         $theType = Lib::type();
 
@@ -205,7 +205,7 @@ class FrontFacade implements FrontInterface
         return $folder;
     }
 
-    public function getFolderByDirectory(string $directory) : Folder
+    public function folderByDirectoryGet(string $directory) : Folder
     {
         $theType = Lib::type();
 
@@ -239,7 +239,7 @@ class FrontFacade implements FrontInterface
         $this->store->foldersByAlias[$folderAlias] = $folderObject;
         $this->store->foldersByDirectory[$folderRealpath] = $folderObject;
 
-        $this->engine->addFolder($folderAlias, $folderRealpath, false);
+        $this->engine->addFolder($folderAlias, $folderRealpath, $fallback = false);
 
         return $i;
     }
@@ -248,12 +248,12 @@ class FrontFacade implements FrontInterface
     /**
      * @return Remote[]
      */
-    public function getRemotes() : array
+    public function remotes() : array
     {
         return $this->store->remotes;
     }
 
-    public function getRemote(int $id) : Remote
+    public function remoteGet(int $id) : Remote
     {
         if ( ! isset($this->store->remotes[$id]) ) {
             throw new RuntimeException(
@@ -264,7 +264,7 @@ class FrontFacade implements FrontInterface
         return $this->store->remotes[$id];
     }
 
-    public function getRemoteByAlias(string $alias) : Remote
+    public function remoteByAliasGet(string $alias) : Remote
     {
         $theType = Lib::type();
 
@@ -319,7 +319,7 @@ class FrontFacade implements FrontInterface
     /**
      * @param FrontTemplateResolverInterface|false|null $templateResolver
      */
-    public function templateResolver($templateResolver = null) : ?FrontTemplateResolverInterface
+    public function templateResolverSet($templateResolver = null) : ?FrontTemplateResolverInterface
     {
         $last = $this->templateResolver;
 
@@ -376,7 +376,7 @@ class FrontFacade implements FrontInterface
     /**
      * @param string|false|null $langCurrent
      */
-    public function templateLangCurrent($langCurrent) : ?string
+    public function templateLangCurrentSet($langCurrent) : ?string
     {
         $last = $this->store->templateLangCurrent;
 
@@ -401,7 +401,7 @@ class FrontFacade implements FrontInterface
     /**
      * @param string|false|null $langDefault
      */
-    public function templateLangDefault($langDefault) : ?string
+    public function templateLangDefaultSet($langDefault) : ?string
     {
         $last = $this->store->templateLangDefault;
 
@@ -424,21 +424,6 @@ class FrontFacade implements FrontInterface
     }
 
 
-    public function make($name, array $data = []) : PlatesTemplateInterface
-    {
-        return $name instanceof TemplateInterface
-            ? $name
-            : $this->engine->make($name, $data);
-    }
-
-    public function render($name, array $data = []) : string
-    {
-        return $name instanceof TemplateInterface
-            ? $name->render($data)
-            : $this->engine->render($name, $data);
-    }
-
-
     /**
      * @param callable|false|null $fnTemplateGetItem
      */
@@ -457,18 +442,33 @@ class FrontFacade implements FrontInterface
 
 
     /**
-     * @param FrontAssetLocalResolverInterface|false|null $assetLocalResolver
+     * @param FrontAssetResolverLocalInterface|false|null $assetLocalResolver
      */
-    public function assetLocalResolver($assetLocalResolver = null) : ?FrontAssetLocalResolverInterface
+    public function assetResolverLocalSet($assetLocalResolver = null) : ?FrontAssetResolverLocalInterface
     {
-        return $this->assetManager->localResolver($assetLocalResolver);
+        return $this->assetManager->resolverLocalSet($assetLocalResolver);
     }
 
     /**
-     * @param FrontAssetRemoteResolverInterface|false|null $assetRemoteResolver
+     * @param FrontAssetResolverRemoteInterface|false|null $assetRemoteResolver
      */
-    public function assetRemoteResolver($assetRemoteResolver = null) : ?FrontAssetRemoteResolverInterface
+    public function assetResolverRemoteSet($assetRemoteResolver = null) : ?FrontAssetResolverRemoteInterface
     {
-        return $this->assetManager->remoteResolver($assetRemoteResolver);
+        return $this->assetManager->resolverRemoteSet($assetRemoteResolver);
+    }
+
+
+    public function make($name, array $data = []) : PlatesTemplateInterface
+    {
+        return $name instanceof TemplateInterface
+            ? $name
+            : $this->engine->make($name, $data);
+    }
+
+    public function render($name, array $data = []) : string
+    {
+        return $name instanceof TemplateInterface
+            ? $name->render($data)
+            : $this->engine->render($name, $data);
     }
 }
