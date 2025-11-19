@@ -96,10 +96,11 @@ class FrontFacade implements FrontInterface
         $this->store->publicPath = $publicPath;
         $this->store->templateLangCurrent = $this->config->templateLangCurrent;
         $this->store->templateLangDefault = $this->config->templateLangDefault;
-        $this->store->appNameShort = $this->config->tagAppNameShort;
-        $this->store->appNameFull = $this->config->tagAppNameFull;
-        $this->store->assetVersion = $this->config->assetVersion;
         $this->store->assetExtensionsMap = $this->config->assetExtensionsMap;
+        $this->store->assetLocalVersion = $this->config->assetLocalVersion;
+        $this->store->assetRemoteVersion = $this->config->assetRemoteVersion;
+        $this->store->tagAppNameShort = $this->config->tagAppNameShort;
+        $this->store->tagAppNameFull = $this->config->tagAppNameFull;
 
         $this->engine = $this->factory->newPlatesEngine(
             $this->assetManager,
@@ -460,14 +461,14 @@ class FrontFacade implements FrontInterface
 
     public function make($name, array $data = []) : PlatesTemplateInterface
     {
-        return $name instanceof TemplateInterface
+        return ($name instanceof TemplateInterface)
             ? $name
             : $this->engine->make($name, $data);
     }
 
     public function render($name, array $data = []) : string
     {
-        return $name instanceof TemplateInterface
+        return ($name instanceof TemplateInterface)
             ? $name->render($data)
             : $this->engine->render($name, $data);
     }

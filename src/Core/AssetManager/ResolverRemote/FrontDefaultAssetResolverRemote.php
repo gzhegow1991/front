@@ -47,7 +47,7 @@ class FrontDefaultAssetResolverRemote extends AbstractFrontAssetResolverRemote
         $src = $thePhp->path_join([ $remotePath, $inputNormalized ]);
 
         $resolved = [
-            'key'    => $inputNormalized,
+            'input'  => $inputNormalized,
             'remote' => $srcRemote,
             'src'    => $src,
         ];

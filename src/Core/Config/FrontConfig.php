@@ -6,6 +6,7 @@ use Gzhegow\Lib\Lib;
 use Gzhegow\Front\Core\Struct\Folder;
 use Gzhegow\Front\Core\Struct\Remote;
 use Gzhegow\Lib\Config\AbstractConfig;
+use Gzhegow\Front\Exception\LogicException;
 
 
 /**
@@ -21,8 +22,9 @@ use Gzhegow\Lib\Config\AbstractConfig;
  * @property string                             $templateLangCurrent
  * @property string                             $templateLangDefault
  *
- * @property string|null                        $assetVersion
  * @property array<string, array<string, bool>> $assetExtensionsMap
+ * @property string|true|null                   $assetLocalVersion
+ * @property string|null                        $assetRemoteVersion
  *
  * @property string                             $tagAppNameShort
  * @property string                             $tagAppNameFull
@@ -37,11 +39,11 @@ class FrontConfig extends AbstractConfig
     /**
      * @var string
      */
-    protected $directory;
+    protected $fileExtension;
     /**
      * @var string
      */
-    protected $fileExtension;
+    protected $directory;
     /**
      * @var string|null
      */
@@ -65,10 +67,6 @@ class FrontConfig extends AbstractConfig
      */
     protected $templateLangDefault;
 
-    /**
-     * @var string|null
-     */
-    protected $assetVersion;
     /**
      * @var array<string, array<string, bool>>
      */
@@ -96,6 +94,14 @@ class FrontConfig extends AbstractConfig
             'png'          => true,
         ],
     ];
+    /**
+     * @var string|true|null
+     */
+    protected $assetLocalVersion;
+    /**
+     * @var string|null
+     */
+    protected $assetRemoteVersion;
 
     /**
      * @var string
@@ -113,34 +119,31 @@ class FrontConfig extends AbstractConfig
 
         $this->isDebug = (bool) $this->isDebug;
 
-        $this->directory = $theType->dirpath_realpath($this->directory)->orThrow();
         $this->fileExtension = $theType->string($this->fileExtension)->orThrow();
 
-        if (null !== $this->publicPath) {
+        $this->directory = $theType->dirpath_realpath($this->directory)->orThrow();
+
+        if ( null !== $this->publicPath ) {
             $this->publicPath = $theType->path($this->publicPath)->orThrow();
         }
 
         foreach ( $this->folders as $i => $folder ) {
-            $this->folders[ $i ] = Folder::from($folder)->orThrow();
+            $this->folders[$i] = Folder::from($folder)->orThrow();
         }
 
         foreach ( $this->remotes as $i => $remote ) {
-            $this->remotes[ $i ] = Remote::from($remote)->orThrow();
+            $this->remotes[$i] = Remote::from($remote)->orThrow();
         }
 
-        if (null !== $this->templateLangCurrent) {
+        if ( null !== $this->templateLangCurrent ) {
             $this->templateLangCurrent = $theType->string_not_empty($this->templateLangCurrent)->orThrow();
         }
 
-        if (null !== $this->templateLangDefault) {
+        if ( null !== $this->templateLangDefault ) {
             $this->templateLangDefault = $theType->string_not_empty($this->templateLangDefault)->orThrow();
         }
 
-        if (null !== $this->assetVersion) {
-            $this->assetVersion = $theType->string_not_empty($this->assetVersion)->orThrow();
-        }
-
-        if ([] !== $this->assetExtensionsMap) {
+        if ( null !== $this->assetExtensionsMap ) {
             foreach ( $this->assetExtensionsMap as $extFrom => $extToArray ) {
                 $theType->array_not_empty($extToArray)->orThrow();
 
@@ -149,16 +152,34 @@ class FrontConfig extends AbstractConfig
                 foreach ( $extToArray as $extTo => $bool ) {
                     $theType->string_not_empty($extTo)->orThrow();
 
-                    $this->assetExtensionsMap[ $extFrom ][ $extTo ] = true;
+                    $this->assetExtensionsMap[$extFrom][$extTo] = true;
                 }
             }
         }
 
-        if (null !== $this->tagAppNameShort) {
+        if ( null !== $this->assetLocalVersion ) {
+            if ( true === $this->assetLocalVersion ) {
+                $this->assetLocalVersion = true;
+
+            } elseif ( $theType->string_not_empty($this->assetLocalVersion)->isOk([ &$string ]) ) {
+                $this->assetLocalVersion = $string;
+
+            } else {
+                throw new LogicException(
+                    [ 'The `assetLocalVersion` should be string or TRUE', $this ]
+                );
+            }
+        }
+
+        if ( null !== $this->assetRemoteVersion ) {
+            $this->assetRemoteVersion = $theType->string_not_empty($this->assetRemoteVersion)->orThrow();
+        }
+
+        if ( null !== $this->tagAppNameShort ) {
             $this->tagAppNameShort = $theType->string_not_empty($this->tagAppNameShort)->orThrow();
         }
 
-        if (null !== $this->tagAppNameFull) {
+        if ( null !== $this->tagAppNameFull ) {
             $this->tagAppNameFull = $theType->string_not_empty($this->tagAppNameFull)->orThrow();
         }
 

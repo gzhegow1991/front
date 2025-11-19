@@ -82,6 +82,8 @@ class FrontAssetManager implements FrontAssetManagerInterface
         $cacheKey = "{$templatePath}\0{$input}";
 
         if ( ! isset($this->cacheMemoryLocal[$cacheKey]) ) {
+            $theType = Lib::type();
+
             if ( null !== $this->localResolver ) {
                 $resolved = $this->localResolver->resolve($input, $template);
 
@@ -94,12 +96,15 @@ class FrontAssetManager implements FrontAssetManagerInterface
                 ];
             }
 
-            $srcVersion = null
-                ?? ($this->frontStore->assetVersion)
-                ?? (isset($resolved['realpath']) ? filemtime($resolved['realpath']) : null)
-                ?: null;
+            $srcVersion = null;
+            if ( true === $this->frontStore->assetLocalVersion ) {
+                $srcVersion = (null !== $resolved['realpath'])
+                    ? filemtime($resolved['realpath'])
+                    : null;
 
-            $resolved['version'] = $srcVersion;
+            } elseif ( is_string($this->frontStore->assetLocalVersion) ) {
+                $srcVersion = $this->frontStore->assetLocalVersion;
+            }
 
             $src = $srcUri = $resolved['src'];
 
@@ -109,6 +114,7 @@ class FrontAssetManager implements FrontAssetManagerInterface
                 $srcUri = $theUrl->uri($src, [ 'v' => $srcVersion ]);
             }
 
+            $resolved['version'] = $srcVersion;
             $resolved['uri'] = $srcUri;
 
             $this->cacheMemoryLocal[$cacheKey] = $resolved;
@@ -151,22 +157,23 @@ class FrontAssetManager implements FrontAssetManagerInterface
     public function resolveRemote(string $input, Template $template) : array
     {
         if ( ! isset($this->cacheMemoryRemote[$input]) ) {
+            $theType = Lib::type();
+
             if ( null !== $this->remoteResolver ) {
                 $resolved = $this->remoteResolver->resolve($input, $template);
 
             } else {
                 $resolved = [
-                    'key'    => $input,
+                    'input'  => $input,
                     'remote' => null,
                     'src'    => $input,
                 ];
             }
 
-            $srcVersion = null
-                ?? ($this->frontStore->assetVersion)
-                ?: null;
-
-            $resolved['version'] = $srcVersion;
+            $srcVersion = null;
+            if ( $theType->string_not_empty($this->frontStore->assetRemoteVersion)->isOk([ &$string ]) ) {
+                $srcVersion = $string;
+            }
 
             $src = $srcUri = $resolved['src'];
 
@@ -176,6 +183,7 @@ class FrontAssetManager implements FrontAssetManagerInterface
                 $srcUri = $theUrl->uri($src, [ 'v' => $srcVersion ]);
             }
 
+            $resolved['version'] = $srcVersion;
             $resolved['uri'] = $srcUri;
 
             $this->cacheMemoryRemote[$input] = $resolved;

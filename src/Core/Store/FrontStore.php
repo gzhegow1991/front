@@ -13,11 +13,12 @@ class FrontStore
     /**
      * @var string
      */
-    public $directory;
+    public $fileExtension;
+
     /**
      * @var string
      */
-    public $fileExtension;
+    public $directory;
     /**
      * @var string|null
      */
@@ -55,20 +56,24 @@ class FrontStore
     public $templateLangDefault;
 
     /**
-     * @var string
-     */
-    public $appNameShort;
-    /**
-     * @var string
-     */
-    public $appNameFull;
-
-    /**
      * @var array<string, array<string, bool>>
      */
     public $assetExtensionsMap = [];
     /**
      * @var string|null
      */
-    public $assetVersion;
+    public $assetLocalVersion;
+    /**
+     * @var string|null
+     */
+    public $assetRemoteVersion;
+
+    /**
+     * @var string
+     */
+    public $tagAppNameShort;
+    /**
+     * @var string
+     */
+    public $tagAppNameFull;
 }

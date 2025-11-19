@@ -172,7 +172,7 @@ class FrontTagManager implements FrontTagManagerInterface
 
         $altString = $theType->string_not_empty($alt)->orThrow();
 
-        $websiteAppName = $this->frontStore->appNameShort;
+        $websiteAppName = $this->frontStore->tagAppNameShort;
 
         if ( $altString !== $websiteAppName ) {
             $altString = "{$altString}{$separator}{$websiteAppName}";
@@ -199,7 +199,7 @@ class FrontTagManager implements FrontTagManagerInterface
             return null;
         }
 
-        $websiteAppName = $this->frontStore->appNameShort;
+        $websiteAppName = $this->frontStore->tagAppNameShort;
 
         if ( $altString !== $websiteAppName ) {
             $altString = "{$altString}{$separator}{$websiteAppName}";
@@ -217,7 +217,7 @@ class FrontTagManager implements FrontTagManagerInterface
 
         $titleString = $theType->string_not_empty($title)->orThrow();
 
-        $websiteAppName = $this->frontStore->appNameShort;
+        $websiteAppName = $this->frontStore->tagAppNameShort;
 
         if ( $titleString !== $websiteAppName ) {
             $titleString = "{$titleString}{$separator}{$websiteAppName}";
@@ -244,7 +244,7 @@ class FrontTagManager implements FrontTagManagerInterface
             return null;
         }
 
-        $websiteAppName = $this->frontStore->appNameShort;
+        $websiteAppName = $this->frontStore->tagAppNameShort;
 
         if ( $titleString !== $websiteAppName ) {
             $titleString = "{$titleString}{$separator}{$websiteAppName}";

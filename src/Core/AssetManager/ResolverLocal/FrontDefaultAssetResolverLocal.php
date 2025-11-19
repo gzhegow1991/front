@@ -37,7 +37,7 @@ class FrontDefaultAssetResolverLocal extends AbstractFrontAssetResolverLocal
 
             $srcFolder = $folderRoot;
             $srcFolderRealpath = $folderRoot->getDirectory();
-            $srcFolderPublicPath = $folderRootPublicPath;
+            $srcFolderPublicPath = $folderRoot->getPublicPath();
 
         } else {
             $split = explode('::', $inputNormalized, 2);
@@ -77,7 +77,7 @@ class FrontDefaultAssetResolverLocal extends AbstractFrontAssetResolverLocal
 
                 $srcFolder = $folderCurrent;
                 $srcFolderRealpath = $folderCurrent->getDirectory();
-                $srcFolderPublicPath = $folderCurrentPublicPath;
+                $srcFolderPublicPath = $folderCurrent->getPublicPath();
 
                 $srcRealSubpath = str_replace($srcFolderRealpath, '', $directoryCurrentRealpath);
                 $srcPublicSubpath = $thePhp->path_normalize($srcRealSubpath);
@@ -87,7 +87,10 @@ class FrontDefaultAssetResolverLocal extends AbstractFrontAssetResolverLocal
             }
         }
 
-        $srcFile = $theFs->path_join([ $srcFolderRealpath, $inputNormalized ]);
+        $srcInput = $inputNormalized;
+        $srcFile = $theFs->path_join([ $srcFolderRealpath, $srcInput ]);
+
+        $srcInputDir = dirname($srcInput);
 
         $pi = $thePhp->pathinfo(
             $srcFile,
@@ -97,55 +100,63 @@ class FrontDefaultAssetResolverLocal extends AbstractFrontAssetResolverLocal
             | _PHP_PATHINFO_EXTENSIONS
             | _PHP_PATHINFO_FNAME
         );
-        $srcDir = $pi['dirname'];
-        $srcFname = $pi['fname'];
-        $srcExtensions = $pi['extensions'];
+        $srcFileDir = $pi['dirname'];
+        $srcFileFname = $pi['fname'];
+        $srcFileExtensions = $pi['extensions'];
 
         $srcFileList = [];
+
         $srcRealpathNew = null;
+        $srcNew = null;
 
-        if ( isset($this->frontStore->assetExtensionsMap[$srcExtensions]) ) {
-            foreach ( $this->frontStore->assetExtensionsMap[$srcExtensions] as $extTo => $bool ) {
-                $srcFileExtTo = $thePhp->path_join([ $srcDir, "{$srcFname}.{$extTo}" ]);
-                $srcFileList[$srcFileExtTo] = true;
+        $map = $this->frontStore->assetExtensionsMap[$srcFileExtensions] ?? [];
+        if ( [] !== $map ) {
+            foreach ( $map as $extTo => $bool ) {
+                $srcInputCurrent = $thePhp->path_join([ $srcInputDir, "{$srcFileFname}.{$extTo}" ]);
+                $srcFileCurrent = $thePhp->path_join([ $srcFileDir, "{$srcFileFname}.{$extTo}" ]);
 
-                $srcRealpathExtTo = realpath($srcFileExtTo);
-                if ( false === $srcRealpathExtTo ) {
-                    continue;
+                $srcFileList[$srcFileCurrent] = true;
+
+                $srcRealpathCurrent = realpath($srcFileCurrent);
+                if ( false !== $srcRealpathCurrent ) {
+                    $srcRealpathNew = $srcRealpathCurrent;
+                    $srcNew = $thePhp->path_join([ $srcFolderPublicPath, $srcInputCurrent ]);
+
+                    break;
                 }
-
-                $srcRealpathNew = $srcRealpathExtTo;
-
-                break;
             }
         }
 
-        if ( null === $srcRealpathNew ) {
+        if ( null === $srcNew ) {
+            $srcInputCurrent = $srcInput;
+            $srcFileCurrent = $srcFile;
+
             $srcFileList[$srcFile] = true;
 
-            $srcRealpath = realpath($srcFile);
-            if ( false === $srcRealpath ) {
-                throw new RuntimeException(
-                    [
-                        ''
-                        . 'The `file` is not found: '
-                        . '[ ' . implode(' ][ ', array_keys($srcFileList)) . ' ]',
-                        //
-                        $srcFileList,
-                    ]
-                );
+            $srcRealpathCurrent = realpath($srcFileCurrent);
+            if ( false !== $srcRealpathCurrent ) {
+                $srcRealpathNew = $srcRealpathCurrent;
+                $srcNew = $thePhp->path_join([ $srcFolderPublicPath, $srcInputCurrent ]);
             }
-
-            $srcRealpathNew = $srcRealpath;
         }
 
-        $src = $thePhp->path_join([ $srcFolderPublicPath, $inputNormalized ]);
+        if ( false === $srcRealpathNew ) {
+            throw new RuntimeException(
+                [
+                    ''
+                    . 'The `file` is not found: '
+                    . '[ ' . implode(' ][ ', array_keys($srcFileList)) . ' ]',
+                    //
+                    $srcFileList,
+                ]
+            );
+        }
 
         $resolved = [
-            'key'      => $inputNormalized,
+            'input'    => $inputNormalized,
             'folder'   => $srcFolder,
             'realpath' => $srcRealpathNew,
-            'src'      => $src,
+            'src'      => $srcNew,
         ];
 
         return $resolved;

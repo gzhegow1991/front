@@ -19,8 +19,10 @@ php test.php
 
 // > настраиваем PHP
 \Gzhegow\Lib\Lib::entrypoint()
+    ->useAllRecommended($lock = false)
+    //
     ->setDirRoot(__DIR__ . '/..')
-    ->useAllRecommended()
+    ->useAll($lock = true)
 ;
 
 
@@ -66,35 +68,34 @@ $config = new \Gzhegow\Front\Core\Config\FrontConfig();
 $config->configure(
     static function (\Gzhegow\Front\Core\Config\FrontConfig $config) use ($ffn) {
         // >>> шаблонизатор
+        // > устанавливаем режим DEBUG, чтобы в HTML выводились пути к шаблонам
         $config->isDebug = true;
-        //
-        // > устанавливаем папку для шаблонов
-        $config->directory = __DIR__ . '/disc/html';
         //
         // > устанавливаем формат файла шаблона
         $config->fileExtension = 'phtml';
         //
-        // > устанавливаем путь для ассетов, который будет добавлен, если в ->localSrc() использовать путь, начинающийся со `/`
+        // > устанавливаем папку для шаблонов
+        $config->directory = __DIR__ . '/disc/html';
+        //
+        // > устанавливаем путь для ассетов, который будет добавлен, если в ->assetLocalSrc() использовать путь, начинающийся со `/`
+        // > в начале работы инструмент добавляет Folder с именем `@root`, папкой `->directory` и внешним путём `->publicPath`
         $config->publicPath = '/disc/html';
         //
-        // > добавляем папки, которые можно использовать для поиска шаблонов, и при выведении ассетов внутри них
+        // > добавляем ещё папки, которые можно использовать для поиска шаблонов, а также при выведении ссылок на ассеты внутри них
         $config->folders = [
             \Gzhegow\Front\Core\Struct\Folder::fromArray([ '@disc', __DIR__ . '/disc', '/disc' ])->orThrow(),
         ];
         //
-        // > добавляем внешние хранилища навроде CDN для выведения ассетов
+        // > добавляем внешние хранилища навроде CDN для выведения внешних ассетов
         $config->remotes = [
             \Gzhegow\Front\Core\Struct\Remote::fromArray([ '@cdn', 'https://cdn.site.com' ])->orThrow(),
         ];
         //
         // > устанавливаем языки, чтобы resolver с их поддержкой мог искать шаблоны в языковых подпапках
         $config->templateLangCurrent = 'ru';
-        $config->templateLangDefault = 'ru';
+        $config->templateLangDefault = 'en';
         //
-        // > можно задать версию для ассетов, иначе для локальных будет использовано filemtime
-        $config->assetVersion = '1.0.0';
-        //
-        // > можно задать расширения для проверки - например, если изображения минифицируются вручную
+        // > можно задать расширения для поиска более подходящего файла - например, если изображения минифицируются вручную
         $config->assetExtensionsMap = [
             'gif'       => [
                 'min.gif.webp' => true,
@@ -147,7 +148,19 @@ $config->configure(
                 'min.png'      => true,
                 'png'          => true,
             ],
+            //
+            'svg'       => [
+                'min.svg' => true,
+                'svg'     => true,
+            ],
         ];
+        //
+        // > можно задать версию для локальных ассетов, чтобы использовать filemtime(realpath) для локальных, установите TRUE
+        // $config->assetLocalVersion = true;
+        $config->assetLocalVersion = '1.0.0';
+        //
+        // > можно задать версию для внешних ассетов, чтобы использовать filemtime для локальных, установите TRUE
+        $config->assetRemoteVersion = '1.0.0';
         //
         // > устанавливаем наименование приложения для менеджера тегов (генерация атрибутов title/alt)
         $config->tagAppNameShort = 'Application';
