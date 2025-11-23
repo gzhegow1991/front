@@ -82,8 +82,6 @@ class FrontAssetManager implements FrontAssetManagerInterface
         $cacheKey = "{$templatePath}\0{$input}";
 
         if ( ! isset($this->cacheMemoryLocal[$cacheKey]) ) {
-            $theType = Lib::type();
-
             if ( null !== $this->localResolver ) {
                 $resolved = $this->localResolver->resolve($input, $template);
 
@@ -102,8 +100,12 @@ class FrontAssetManager implements FrontAssetManagerInterface
                     ? filemtime($resolved['realpath'])
                     : null;
 
-            } elseif ( is_string($this->frontStore->assetLocalVersion) ) {
-                $srcVersion = $this->frontStore->assetLocalVersion;
+            } else {
+                $theType = Lib::type();
+
+                if ( $theType->string_not_empty($this->frontStore->assetLocalVersion)->isOk([ &$string ]) ) {
+                    $srcVersion = $string;
+                }
             }
 
             $src = $srcUri = $resolved['src'];

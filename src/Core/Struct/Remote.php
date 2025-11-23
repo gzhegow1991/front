@@ -34,7 +34,7 @@ class Remote
             ?? static::fromStatic($from)->orNull($ret)
             ?? static::fromArray($from)->orNull($ret);
 
-        if ($ret->isFail()) {
+        if ( $ret->isFail() ) {
             return Ret::throw($fallback, $ret);
         }
 
@@ -46,7 +46,7 @@ class Remote
      */
     public static function fromStatic($from, ?array $fallback = null)
     {
-        if ($from instanceof static) {
+        if ( $from instanceof static ) {
             return Ret::ok($fallback, $from);
         }
 
@@ -62,7 +62,7 @@ class Remote
      */
     public static function fromArray($from, ?array $fallback = null)
     {
-        if (! is_array($from)) {
+        if ( ! is_array($from) ) {
             return Ret::throw(
                 $fallback,
                 [ 'The `from` should be array: ' . static::class, $from ],
@@ -72,25 +72,28 @@ class Remote
 
         $theType = Lib::type();
 
-        $alias = $from[ 'alias' ] ?? $from[ 0 ];
-        $remotePath = $from[ 'remote_path' ] ?? $from[ 1 ];
+        $alias = $from['alias'] ?? $from[0];
+        $remotePath = $from['remote_path'] ?? $from[1];
 
-        if (! $theType->string_not_empty($alias)->isOk([ &$aliasString, &$ret ])) {
-            return Ret::err(
+        if ( ! $theType->string_not_empty($alias)->isOk([ &$aliasString, &$ret ]) ) {
+            return Ret::throw(
+                $fallback,
                 $ret,
                 [ __FILE__, __LINE__ ]
             );
         }
 
-        if ('@' !== $aliasString[ 0 ]) {
-            return Ret::err(
+        if ( '@' !== $aliasString[0] ) {
+            return Ret::throw(
+                $fallback,
                 [ 'The `from[alias]` should begin with sign `@`', $alias ],
                 [ __FILE__, __LINE__ ]
             );
         }
 
-        if (! $theType->uri($remotePath)->isOk([ &$remotePathUri, &$ret ])) {
-            return Ret::err(
+        if ( ! $theType->uri($remotePath)->isOk([ &$remotePathUri, &$ret ]) ) {
+            return Ret::throw(
+                $fallback,
                 $ret,
                 [ __FILE__, __LINE__ ]
             );

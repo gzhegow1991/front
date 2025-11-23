@@ -81,21 +81,24 @@ class Folder
         $publicPath = $from[ 'public_path' ] ?? $from[ 2 ] ?? null;
 
         if (! $theType->string_not_empty($alias)->isOk([ &$aliasString, &$ret ])) {
-            return Ret::err(
+            return Ret::throw(
+                $fallback,
                 $ret,
                 [ __FILE__, __LINE__ ]
             );
         }
 
         if ('@' !== $aliasString[ 0 ]) {
-            return Ret::err(
+            return Ret::throw(
+                $fallback,
                 [ 'The `from[alias]` should begin with sign `@`', $alias ],
                 [ __FILE__, __LINE__ ]
             );
         }
 
         if (! $theType->dirpath_realpath($directory)->isOk([ &$directoryRealpath, &$ret ])) {
-            return Ret::err(
+            return Ret::throw(
+                $fallback,
                 $ret,
                 [ __FILE__, __LINE__ ]
             );
@@ -104,14 +107,16 @@ class Folder
         $publicPathString = null;
         if (null !== $publicPath) {
             if (! $theType->path($publicPath)->isOk([ &$publicPathString, &$ret ])) {
-                return Ret::err(
+                return Ret::throw(
+                    $fallback,
                     $ret,
                     [ __FILE__, __LINE__ ]
                 );
             }
 
             if ('/' !== $publicPathString[ 0 ]) {
-                return Ret::err(
+                return Ret::throw(
+                    $fallback,
                     [ 'The `from[public_path]` should begin with sign `/`', $alias ],
                     [ __FILE__, __LINE__ ]
                 );

@@ -391,6 +391,7 @@ class Template extends LeagueTemplate implements TemplateInterface
         return $this;
     }
 
+
     public function section($name, $default = null)
     {
         if ( ! array_key_exists($name, $this->sections) ) {
@@ -433,6 +434,7 @@ class Template extends LeagueTemplate implements TemplateInterface
 
         return $this;
     }
+
 
     protected function _sectionStart($name)
     {
@@ -524,61 +526,304 @@ class Template extends LeagueTemplate implements TemplateInterface
     }
 
 
-    public function css(string $src, array $attributes = [])
+    public function cssPrint(string $src, array $attributes = []) : string
     {
-        $assetLocalUri = $this->assetLocalUri($src);
+        $htmlAttributes = $this->tagAttributes($attributes);
 
-        if ( ! isset($this->css[$assetLocalUri]) ) {
-            $htmlAttributes = $this->tagAttributes($attributes);
+        $assetUri = $this->assetLocalUri($src);
 
-            $this->sections[static::SECTION_CSS] .= "<link rel=\"stylesheet\" href=\"{$assetLocalUri}\" {$htmlAttributes} />\n";
+        $html = "<link rel=\"stylesheet\" href=\"{$assetUri}\" {$htmlAttributes} />";
 
-            $this->css[$assetLocalUri] = true;
+        return $html;
+    }
+
+    public function cssPush($srcArray, array $attributesArray = [])
+    {
+        $thePhp = Lib::php();
+
+        $srcList = $thePhp->to_list($srcArray);
+
+        $content = [];
+        foreach ( $srcList as $i => $src ) {
+            $assetUri = $this->assetLocalUri($src);
+
+            if ( isset($this->css[$assetUri]) ) {
+                continue;
+            }
+
+            $this->css[$assetUri] = true;
+
+            $htmlAttributes = $this->tagAttributes($attributesArray[$i] ?? $attributesArray);
+            $html = "<link rel=\"stylesheet\" href=\"{$assetUri}\" {$htmlAttributes} />";
+
+            $content[] = $html;
+        }
+
+        if ( [] !== $content ) {
+            $this->sections[static::SECTION_CSS] = ''
+                . $this->sections[static::SECTION_CSS]
+                . "\n"
+                . implode("\n", $content);
         }
 
         return $this;
     }
 
-    public function cssRemote(string $src, array $attributes = [])
+    public function cssUnshift($srcArray, array $attributesArray = [])
     {
-        $assetRemoteUri = $this->assetRemoteUri($src);
+        $thePhp = Lib::php();
 
-        if ( ! isset($this->css[$assetRemoteUri]) ) {
-            $htmlAttributes = $this->tagAttributes($attributes);
+        $srcList = $thePhp->to_list($srcArray);
 
-            $this->sections[static::SECTION_CSS] .= "<link rel=\"stylesheet\" href=\"{$assetRemoteUri}\" {$htmlAttributes} />\n";
+        $content = [];
+        foreach ( $srcList as $i => $src ) {
+            $assetUri = $this->assetLocalUri($src);
 
-            $this->css[$assetRemoteUri] = true;
+            if ( isset($this->css[$assetUri]) ) {
+                continue;
+            }
+
+            $this->css[$assetUri] = true;
+
+            $htmlAttributes = $this->tagAttributes($attributesArray[$i] ?? $attributesArray);
+            $html = "<link rel=\"stylesheet\" href=\"{$assetUri}\" {$htmlAttributes} />";
+
+            $content[] = $html;
+        }
+
+        if ( [] !== $content ) {
+            $this->sections[static::SECTION_CSS] = ''
+                . implode("\n", $content)
+                . "\n"
+                . $this->sections[static::SECTION_CSS];
         }
 
         return $this;
     }
 
-    public function js(string $src, array $attributes = [])
+
+    public function cssRemotePrint(string $src, array $attributes = []) : string
     {
-        $assetLocalUri = $this->assetLocalUri($src);
+        $htmlAttributes = $this->tagAttributes($attributes);
 
-        if ( ! isset($this->js[$assetLocalUri]) ) {
-            $htmlAttributes = $this->tagAttributes($attributes);
+        $assetUri = $this->assetRemoteUri($src);
 
-            $this->sections[static::SECTION_JS] .= "<script src=\"{$assetLocalUri}\" {$htmlAttributes}></script>\n";
+        $html = "<link rel=\"stylesheet\" href=\"{$assetUri}\" {$htmlAttributes} />";
 
-            $this->js[$assetLocalUri] = true;
+        return $html;
+    }
+
+    public function cssRemotePush($srcArray, array $attributesArray = [])
+    {
+        $thePhp = Lib::php();
+
+        $srcList = $thePhp->to_list($srcArray);
+
+        $content = [];
+        foreach ( $srcList as $i => $src ) {
+            $assetUri = $this->assetRemoteUri($src);
+
+            if ( isset($this->css[$assetUri]) ) {
+                continue;
+            }
+
+            $this->css[$assetUri] = true;
+
+            $htmlAttributes = $this->tagAttributes($attributesArray[$i] ?? $attributesArray);
+            $html = "<link rel=\"stylesheet\" href=\"{$assetUri}\" {$htmlAttributes} />";
+
+            $content[] = $html;
+        }
+
+        if ( [] !== $content ) {
+            $this->sections[static::SECTION_CSS] = ''
+                . $this->sections[static::SECTION_CSS]
+                . "\n"
+                . implode("\n", $content);
         }
 
         return $this;
     }
 
-    public function jsRemote(string $src, array $attributes = [])
+    public function cssRemoteUnshift($srcArray, array $attributesArray = [])
     {
-        $assetRemoteUri = $this->assetRemoteUri($src);
+        $thePhp = Lib::php();
 
-        if ( ! isset($this->js[$assetRemoteUri]) ) {
-            $htmlAttributes = $this->tagAttributes($attributes);
+        $srcList = $thePhp->to_list($srcArray);
 
-            $this->sections[static::SECTION_JS] .= "<script src=\"{$assetRemoteUri}\" {$htmlAttributes}></script>\n";
+        $content = [];
+        foreach ( $srcList as $i => $src ) {
+            $assetUri = $this->assetRemoteUri($src);
 
-            $this->js[$assetRemoteUri] = true;
+            if ( isset($this->css[$assetUri]) ) {
+                continue;
+            }
+
+            $this->css[$assetUri] = true;
+
+            $htmlAttributes = $this->tagAttributes($attributesArray[$i] ?? $attributesArray);
+            $html = "<link rel=\"stylesheet\" href=\"{$assetUri}\" {$htmlAttributes} />";
+
+            $content[] = $html;
+        }
+
+        if ( [] !== $content ) {
+            $this->sections[static::SECTION_CSS] = ''
+                . implode("\n", $content)
+                . "\n"
+                . $this->sections[static::SECTION_CSS];
+        }
+
+        return $this;
+    }
+
+
+    public function jsPrint(string $src, array $attributes = []) : string
+    {
+        $htmlAttributes = $this->tagAttributes($attributes);
+
+        $assetUri = $this->assetLocalUri($src);
+
+        $html = "<script src=\"{$assetUri}\" {$htmlAttributes}></script>";
+
+        return $html;
+    }
+
+    public function jsPush($srcArray, array $attributesArray = [])
+    {
+        $thePhp = Lib::php();
+
+        $srcList = $thePhp->to_list($srcArray);
+
+        $content = [];
+        foreach ( $srcList as $i => $src ) {
+            $assetUri = $this->assetLocalUri($src);
+
+            if ( isset($this->css[$assetUri]) ) {
+                continue;
+            }
+
+            $this->css[$assetUri] = true;
+
+            $htmlAttributes = $this->tagAttributes($attributesArray[$i] ?? $attributesArray);
+            $html = "<script src=\"{$assetUri}\" {$htmlAttributes}></script>";
+
+            $content[] = $html;
+        }
+
+        if ( [] !== $content ) {
+            $this->sections[static::SECTION_CSS] = ''
+                . $this->sections[static::SECTION_CSS]
+                . "\n"
+                . implode("\n", $content);
+        }
+
+        return $this;
+    }
+
+    public function jsUnshift($srcArray, array $attributesArray = [])
+    {
+        $thePhp = Lib::php();
+
+        $srcList = $thePhp->to_list($srcArray);
+
+        $content = [];
+        foreach ( $srcList as $i => $src ) {
+            $assetUri = $this->assetLocalUri($src);
+
+            if ( isset($this->css[$assetUri]) ) {
+                continue;
+            }
+
+            $this->css[$assetUri] = true;
+
+            $htmlAttributes = $this->tagAttributes($attributesArray[$i] ?? $attributesArray);
+            $html = "<script src=\"{$assetUri}\" {$htmlAttributes}></script>";
+
+            $content[] = $html;
+        }
+
+        if ( [] !== $content ) {
+            $this->sections[static::SECTION_CSS] = ''
+                . implode("\n", $content)
+                . "\n"
+                . $this->sections[static::SECTION_CSS];
+        }
+
+        return $this;
+    }
+
+
+    public function jsRemotePrint(string $src, array $attributes = []) : string
+    {
+        $htmlAttributes = $this->tagAttributes($attributes);
+
+        $assetUri = $this->assetRemoteUri($src);
+
+        $html = "<script src=\"{$assetUri}\" {$htmlAttributes}></script>";
+
+        return $html;
+    }
+
+    public function jsRemotePush($srcArray, array $attributesArray = [])
+    {
+        $thePhp = Lib::php();
+
+        $srcList = $thePhp->to_list($srcArray);
+
+        $content = [];
+        foreach ( $srcList as $i => $src ) {
+            $assetUri = $this->assetRemoteUri($src);
+
+            if ( isset($this->css[$assetUri]) ) {
+                continue;
+            }
+
+            $this->css[$assetUri] = true;
+
+            $htmlAttributes = $this->tagAttributes($attributesArray[$i] ?? $attributesArray);
+            $html = "<script src=\"{$assetUri}\" {$htmlAttributes}></script>";
+
+            $content[] = $html;
+        }
+
+        if ( [] !== $content ) {
+            $this->sections[static::SECTION_CSS] = ''
+                . $this->sections[static::SECTION_CSS]
+                . "\n"
+                . implode("\n", $content);
+        }
+
+        return $this;
+    }
+
+    public function jsRemoteUnshift($srcArray, array $attributesArray = [])
+    {
+        $thePhp = Lib::php();
+
+        $srcList = $thePhp->to_list($srcArray);
+
+        $content = [];
+        foreach ( $srcList as $i => $src ) {
+            $assetUri = $this->assetRemoteUri($src);
+
+            if ( isset($this->css[$assetUri]) ) {
+                continue;
+            }
+
+            $this->css[$assetUri] = true;
+
+            $htmlAttributes = $this->tagAttributes($attributesArray[$i] ?? $attributesArray);
+            $html = "<script src=\"{$assetUri}\" {$htmlAttributes}></script>";
+
+            $content[] = $html;
+        }
+
+        if ( [] !== $content ) {
+            $this->sections[static::SECTION_CSS] = ''
+                . implode("\n", $content)
+                . "\n"
+                . $this->sections[static::SECTION_CSS];
         }
 
         return $this;
@@ -610,6 +855,12 @@ class Template extends LeagueTemplate implements TemplateInterface
     public function assetLocalRealpath(string $input) : string
     {
         $resolved = $this->assetLocal($input);
+
+        if ( null === $resolved['realpath'] ) {
+            throw new RuntimeException(
+                [ 'Unable to resolve realpath for: ' . $input, $input ]
+            );
+        }
 
         return $resolved['realpath'];
     }
