@@ -526,7 +526,7 @@ class Template extends LeagueTemplate implements TemplateInterface
     }
 
 
-    public function cssPrint(string $src, array $attributes = []) : string
+    public function css(string $src, array $attributes = []) : string
     {
         $htmlAttributes = $this->tagAttributes($attributes);
 
@@ -602,7 +602,7 @@ class Template extends LeagueTemplate implements TemplateInterface
     }
 
 
-    public function cssRemotePrint(string $src, array $attributes = []) : string
+    public function cssRemote(string $src, array $attributes = []) : string
     {
         $htmlAttributes = $this->tagAttributes($attributes);
 
@@ -678,7 +678,7 @@ class Template extends LeagueTemplate implements TemplateInterface
     }
 
 
-    public function jsPrint(string $src, array $attributes = []) : string
+    public function js(string $src, array $attributes = []) : string
     {
         $htmlAttributes = $this->tagAttributes($attributes);
 
@@ -754,7 +754,7 @@ class Template extends LeagueTemplate implements TemplateInterface
     }
 
 
-    public function jsRemotePrint(string $src, array $attributes = []) : string
+    public function jsRemote(string $src, array $attributes = []) : string
     {
         $htmlAttributes = $this->tagAttributes($attributes);
 
