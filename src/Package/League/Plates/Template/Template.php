@@ -699,11 +699,11 @@ class Template extends LeagueTemplate implements TemplateInterface
         foreach ( $srcList as $i => $src ) {
             $assetUri = $this->assetLocalUri($src);
 
-            if ( isset($this->css[$assetUri]) ) {
+            if ( isset($this->js[$assetUri]) ) {
                 continue;
             }
 
-            $this->css[$assetUri] = true;
+            $this->js[$assetUri] = true;
 
             $htmlAttributes = $this->tagAttributes($attributesArray[$i] ?? $attributesArray);
             $html = "<script src=\"{$assetUri}\" {$htmlAttributes}></script>";
@@ -712,8 +712,8 @@ class Template extends LeagueTemplate implements TemplateInterface
         }
 
         if ( [] !== $content ) {
-            $this->sections[static::SECTION_CSS] = ''
-                . $this->sections[static::SECTION_CSS]
+            $this->sections[static::SECTION_JS] = ''
+                . $this->sections[static::SECTION_JS]
                 . "\n"
                 . implode("\n", $content);
         }
@@ -731,11 +731,11 @@ class Template extends LeagueTemplate implements TemplateInterface
         foreach ( $srcList as $i => $src ) {
             $assetUri = $this->assetLocalUri($src);
 
-            if ( isset($this->css[$assetUri]) ) {
+            if ( isset($this->js[$assetUri]) ) {
                 continue;
             }
 
-            $this->css[$assetUri] = true;
+            $this->js[$assetUri] = true;
 
             $htmlAttributes = $this->tagAttributes($attributesArray[$i] ?? $attributesArray);
             $html = "<script src=\"{$assetUri}\" {$htmlAttributes}></script>";
@@ -744,10 +744,10 @@ class Template extends LeagueTemplate implements TemplateInterface
         }
 
         if ( [] !== $content ) {
-            $this->sections[static::SECTION_CSS] = ''
+            $this->sections[static::SECTION_JS] = ''
                 . implode("\n", $content)
                 . "\n"
-                . $this->sections[static::SECTION_CSS];
+                . $this->sections[static::SECTION_JS];
         }
 
         return $this;
@@ -775,11 +775,11 @@ class Template extends LeagueTemplate implements TemplateInterface
         foreach ( $srcList as $i => $src ) {
             $assetUri = $this->assetRemoteUri($src);
 
-            if ( isset($this->css[$assetUri]) ) {
+            if ( isset($this->js[$assetUri]) ) {
                 continue;
             }
 
-            $this->css[$assetUri] = true;
+            $this->js[$assetUri] = true;
 
             $htmlAttributes = $this->tagAttributes($attributesArray[$i] ?? $attributesArray);
             $html = "<script src=\"{$assetUri}\" {$htmlAttributes}></script>";
@@ -788,8 +788,8 @@ class Template extends LeagueTemplate implements TemplateInterface
         }
 
         if ( [] !== $content ) {
-            $this->sections[static::SECTION_CSS] = ''
-                . $this->sections[static::SECTION_CSS]
+            $this->sections[static::SECTION_JS] = ''
+                . $this->sections[static::SECTION_JS]
                 . "\n"
                 . implode("\n", $content);
         }
@@ -807,11 +807,11 @@ class Template extends LeagueTemplate implements TemplateInterface
         foreach ( $srcList as $i => $src ) {
             $assetUri = $this->assetRemoteUri($src);
 
-            if ( isset($this->css[$assetUri]) ) {
+            if ( isset($this->js[$assetUri]) ) {
                 continue;
             }
 
-            $this->css[$assetUri] = true;
+            $this->js[$assetUri] = true;
 
             $htmlAttributes = $this->tagAttributes($attributesArray[$i] ?? $attributesArray);
             $html = "<script src=\"{$assetUri}\" {$htmlAttributes}></script>";
@@ -820,10 +820,10 @@ class Template extends LeagueTemplate implements TemplateInterface
         }
 
         if ( [] !== $content ) {
-            $this->sections[static::SECTION_CSS] = ''
+            $this->sections[static::SECTION_JS] = ''
                 . implode("\n", $content)
                 . "\n"
-                . $this->sections[static::SECTION_CSS];
+                . $this->sections[static::SECTION_JS];
         }
 
         return $this;
