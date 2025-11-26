@@ -45,13 +45,13 @@ class FrontDefaultAssetResolverLocal extends AbstractFrontAssetResolverLocal
             if ( count($split) > 1 ) {
                 [ $folderAlias, $inputNormalized ] = $split;
 
-                if ( ! isset($this->frontStore->foldersByAlias[$folderAlias]) ) {
+                if ( ! isset($this->frontStore->folders[$folderAlias]) ) {
                     throw new RuntimeException(
-                        [ 'The `folder` is not found by alias: ' . $folderAlias, $folderAlias ]
+                        [ 'The `folder` is not found by alias: ' . $folderAlias, $this->frontStore ]
                     );
                 }
 
-                $folder = $this->frontStore->foldersByAlias[$folderAlias];
+                $folder = $this->frontStore->folders[$folderAlias];
 
                 if ( ! $folder->hasPublicPath($folderPublicPath) ) {
                     throw new RuntimeException(
@@ -59,7 +59,7 @@ class FrontDefaultAssetResolverLocal extends AbstractFrontAssetResolverLocal
                     );
                 }
 
-                $srcFolder = $this->frontStore->foldersByAlias[$folderAlias];
+                $srcFolder = $folder;
                 $srcFolderRealpath = $srcFolder->getDirectory();
                 $srcFolderPublicPath = $folderPublicPath;
 
@@ -111,7 +111,7 @@ class FrontDefaultAssetResolverLocal extends AbstractFrontAssetResolverLocal
 
         $map = $this->frontStore->assetExtensionsMap[$srcFileExtensions] ?? [];
         if ( [] !== $map ) {
-            foreach ( $map as $extTo => $bool ) {
+            foreach ( array_keys($map) as $extTo ) {
                 $srcInputCurrent = $thePhp->path_join([ $srcInputDir, "{$srcFileFname}.{$extTo}" ]);
                 $srcFileCurrent = $thePhp->path_join([ $srcFileDir, "{$srcFileFname}.{$extTo}" ]);
 

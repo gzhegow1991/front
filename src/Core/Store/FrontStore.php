@@ -25,26 +25,18 @@ class FrontStore
     public $publicPath;
 
     /**
-     * @var Folder[]
+     * @var array<string, Folder>
      */
     public $folders = [];
     /**
      * @var array<string, Folder>
      */
     public $foldersByDirectory = [];
-    /**
-     * @var array<string, Folder>
-     */
-    public $foldersByAlias = [];
 
-    /**
-     * @var Remote[]
-     */
-    public $remotes = [];
     /**
      * @var array<string, Remote>
      */
-    public $remotesByAlias = [];
+    public $remotes = [];
 
     /**
      * @var string|null

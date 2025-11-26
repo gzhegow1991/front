@@ -148,7 +148,7 @@ class Template extends LeagueTemplate implements TemplateInterface
 
     public function folderRoot() : Folder
     {
-        return $this->frontStore->foldersByAlias[Front::ROOT_FOLDER_ALIAS];
+        return $this->frontStore->folders[Front::ROOT_FOLDER_ALIAS];
     }
 
     public function folder() : Folder

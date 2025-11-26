@@ -36,7 +36,7 @@ class FrontDefaultAssetResolverRemote extends AbstractFrontAssetResolverRemote
 
         if ( ! isset($this->frontStore->remotesByAlias[$remoteAlias]) ) {
             throw new RuntimeException(
-                [ 'The `remote` is not found by alias: ' . $remoteAlias, $remoteAlias ]
+                [ 'The `remote` is not found by alias: ' . $remoteAlias, $this->frontStore ]
             );
         }
 

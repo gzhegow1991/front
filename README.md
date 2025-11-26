@@ -22,6 +22,7 @@ php test.php
     ->useAllRecommended($lock = false)
     //
     ->setDirRoot(__DIR__ . '/..')
+    //
     ->useAll($lock = true)
 ;
 
@@ -75,20 +76,20 @@ $config->configure(
         $config->fileExtension = 'phtml';
         //
         // > устанавливаем папку для шаблонов
-        $config->directory = __DIR__ . '/disc/html';
+        $config->directory = __DIR__ . '/html';
         //
         // > устанавливаем путь для ассетов, который будет добавлен, если в ->assetLocalSrc() использовать путь, начинающийся со `/`
         // > в начале работы инструмент добавляет Folder с именем `@root`, папкой `->directory` и внешним путём `->publicPath`
-        $config->publicPath = '/disc/html';
+        $config->publicPath = '/html';
         //
         // > добавляем ещё папки, которые можно использовать для поиска шаблонов, а также при выведении ссылок на ассеты внутри них
         $config->folders = [
-            \Gzhegow\Front\Core\Struct\Folder::fromArray([ '@disc', __DIR__ . '/disc', '/disc' ])->orThrow(),
+            // \Gzhegow\Front\Core\Struct\Folder::fromArray([ '@html', __DIR__ . '/html', '/html' ])->orThrow(),
         ];
         //
         // > добавляем внешние хранилища навроде CDN для выведения внешних ассетов
         $config->remotes = [
-            \Gzhegow\Front\Core\Struct\Remote::fromArray([ '@cdn', 'https://cdn.site.com' ])->orThrow(),
+            // \Gzhegow\Front\Core\Struct\Remote::fromArray([ '@cdn', 'https://cdn.site.com' ])->orThrow(),
         ];
         //
         // > устанавливаем языки, чтобы resolver с их поддержкой мог искать шаблоны в языковых подпапках
@@ -188,12 +189,11 @@ $front = new \Gzhegow\Front\FrontFacade(
 
 // > можно добавить папки в регистр, чтобы вызывать их напрямую через ->render('@modals::{path}')
 // > субъективно я предпочитаю использовать `@html::{путь}`, не разделяя каждую папку отдельно
-$front->folderAdd([ $alias = '@html', $directory = __DIR__ . '/disc/html', $publicPath = '/disc/html' ]);
-// $front->folderAdd([ '@blocks', __DIR__ . '/disc/html/blocks', '/disc/html/blocks', $publicPath = null ]);
-// $front->folderAdd([ '@layouts', __DIR__ . '/disc/html/layouts', '/disc/html/layouts', $publicPath = null ]);
-// $front->folderAdd([ '@modals', __DIR__ . '/disc/html/modals', '/disc/html/modals', $publicPath = null ]);
-// $front->folderAdd([ '@pages', __DIR__ . '/disc/html/pages', '/disc/html/pages', $publicPath = null ]);
-// $front->folderAdd([ '@sections', __DIR__ . '/disc/html/sections', '/disc/html/sections', $publicPath = null ]);
+$front->folderAdd([ $alias = '@html', $directory = __DIR__ . '/html', $publicPath = '/html' ]);
+// $front->folderAdd([ '@blocks', __DIR__ . '/html/blocks', '/html/blocks', $publicPath = null ]);
+// $front->folderAdd([ '@layouts', __DIR__ . '/html/layouts', '/html/layouts', $publicPath = null ]);
+// $front->folderAdd([ '@modals', __DIR__ . '/html/modals', '/html/modals', $publicPath = null ]);
+// $front->folderAdd([ '@pages', __DIR__ . '/html/pages', '/html/pages', $publicPath = null ]);
 
 // > можно добавить `templateResolver`, чтобы, например, подключить языковые шаблоны или искать шаблон в нескольких папках
 $front->templateResolverSet(new \Gzhegow\Front\Core\TemplateResolver\FrontI18nTemplateResolver());
@@ -247,13 +247,13 @@ $fn = function () use ($ffn, $front) {
     $ffn->print('TEST 1');
     echo "\n";
 
-    $beforeDefault = $front->templateLangDefaultSet(false);
-    $beforeCurrent = $front->templateLangCurrentSet(false);
+    $beforeLangDefault = $front->templateLangDefaultSet(false);
+    $beforeLangCurrent = $front->templateLangCurrentSet(false);
 
     $ffn->print($front->render('@html::pages/demo/page.demo.phtml'));
 
-    $front->templateLangCurrentSet($beforeCurrent);
-    $front->templateLangDefaultSet($beforeDefault);
+    $front->templateLangCurrentSet($beforeLangCurrent);
+    $front->templateLangDefaultSet($beforeLangDefault);
 };
 $test = $ffn->test($fn);
 $test->expectStdout('
@@ -268,7 +268,7 @@ $test->expectStdout('
 <div>\n
     <img\n
         alt=\"Cat | Application\" title=\"Cat | Application\"\n
-        src=\"/disc/html/blocks/demo/img/cat-300x300.png?v=1.0.0\"\n
+        src=\"/html/blocks/demo/img/cat-300x300.png?v=1.0.0\"\n
     />\n
 </div>\n
 <!-- [ <<< blocks/demo/block.demo.phtml ] -->\n
@@ -284,36 +284,28 @@ $fn = function () use ($ffn, $front) {
     $ffn->print('TEST 2');
     echo "\n";
 
-    $before = $front->templateLangDefaultSet('ru');
+    $beforeLangDefault = $front->templateLangDefaultSet(false);
+    $beforeLangCurrent = $front->templateLangCurrentSet(false);
 
-    $front->templateLangCurrentSet('ru');
-    $ffn->print($front->render('@html::pages/demo/page.demo.phtml'));
-    echo "\n";
+    $front->templateLangDefaultSet('ru');
 
-    $front->templateLangCurrentSet('en');
+    $front->templateLangCurrentSet('en'); // > будет использован `en`
     $ffn->print($front->render('@html::pages/demo/page.demo'));
     echo "\n";
 
-    // > будет использован `default`, то есть `ru`
-    $front->templateLangCurrentSet('unknown');
+    $front->templateLangCurrentSet('ru'); // > будет использован `ru`, совпадает с `default`
+    $ffn->print($front->render('@html::pages/demo/page.demo'));
+    echo "\n";
+
+    $front->templateLangCurrentSet('unknown'); // > будет использован `default`
     $ffn->print($front->render('@html::pages/demo/page.demo'));
 
-    $front->templateLangDefaultSet($before);
+    $front->templateLangCurrentSet($beforeLangCurrent);
+    $front->templateLangDefaultSet($beforeLangDefault);
 };
 $test = $ffn->test($fn);
 $test->expectStdout('
 "TEST 2"
-
-"<!-- [ >>> layouts/demo/ru/layout.demo.phtml ] -->\n
-<div>Пример шаблона</div>\n
-<div>\n
-<!-- [ >>> pages/demo/page.demo.phtml ] -->\n
-<!-- [ >>> blocks/demo/ru/block.demo.phtml ] -->\n
-<div>Пример блока</div>\n
-<!-- [ <<< blocks/demo/ru/block.demo.phtml ] -->\n
-<!-- [ <<< pages/demo/page.demo.phtml ] -->\n
-</div>\n
-<!-- [ <<< layouts/demo/ru/layout.demo.phtml ] -->"
 
 "<!-- [ >>> layouts/demo/en/layout.demo.phtml ] -->\n
 <div>Demo Layout</div>\n
@@ -326,22 +318,27 @@ $test->expectStdout('
 </div>\n
 <!-- [ <<< layouts/demo/en/layout.demo.phtml ] -->"
 
-"<!-- [ >>> layouts/demo/layout.demo.phtml ] -->\n
+"<!-- [ >>> layouts/demo/ru/layout.demo.phtml ] -->\n
 <div>Пример шаблона</div>\n
 <div>\n
 <!-- [ >>> pages/demo/page.demo.phtml ] -->\n
-<!-- [ >>> blocks/demo/block.demo.phtml ] -->\n
+<!-- [ >>> blocks/demo/ru/block.demo.phtml ] -->\n
 <div>Пример блока</div>\n
-<div>\n
-    <img\n
-        alt=\"Cat | Application\" title=\"Cat | Application\"\n
-        src=\"/disc/html/blocks/demo/img/cat-300x300.png?v=1.0.0\"\n
-    />\n
-</div>\n
-<!-- [ <<< blocks/demo/block.demo.phtml ] -->\n
+<!-- [ <<< blocks/demo/ru/block.demo.phtml ] -->\n
 <!-- [ <<< pages/demo/page.demo.phtml ] -->\n
 </div>\n
-<!-- [ <<< layouts/demo/layout.demo.phtml ] -->"
+<!-- [ <<< layouts/demo/ru/layout.demo.phtml ] -->"
+
+"<!-- [ >>> layouts/demo/ru/layout.demo.phtml ] -->\n
+<div>Пример шаблона</div>\n
+<div>\n
+<!-- [ >>> pages/demo/page.demo.phtml ] -->\n
+<!-- [ >>> blocks/demo/ru/block.demo.phtml ] -->\n
+<div>Пример блока</div>\n
+<!-- [ <<< blocks/demo/ru/block.demo.phtml ] -->\n
+<!-- [ <<< pages/demo/page.demo.phtml ] -->\n
+</div>\n
+<!-- [ <<< layouts/demo/ru/layout.demo.phtml ] -->"
 ');
 $test->run();
 ```

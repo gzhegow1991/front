@@ -20,43 +20,43 @@ interface FrontInterface
     public function getStore() : FrontStore;
 
 
-    public function directoryGet() : string;
-
     public function fileExtensionGet() : string;
+
+    public function directoryGet() : string;
 
     public function publicPathGet() : ?string;
 
 
     /**
-     * @return Folder[]
+     * @return array<string, Folder>
      */
     public function folders() : array;
 
-    public function folderGet(int $id) : Folder;
-
-    public function folderByAliasGet(string $alias) : Folder;
+    public function folderGet(string $alias) : Folder;
 
     public function folderByDirectoryGet(string $directory) : Folder;
 
     /**
      * @param Folder|array $folder
+     *
+     * @return static
      */
-    public function folderAdd($folder) : int;
+    public function folderAdd($folder);
 
 
     /**
-     * @return Remote[]
+     * @return array<string, Remote>
      */
     public function remotes() : array;
 
-    public function remoteGet(int $id) : Remote;
-
-    public function remoteByAliasGet(string $alias) : Remote;
+    public function remoteGet(string $alias) : Remote;
 
     /**
      * @param Remote|array $remote
+     *
+     * @return static
      */
-    public function remoteAdd($remote) : int;
+    public function remoteAdd($remote);
 
 
     public function dataGet($template = null);
@@ -108,15 +108,9 @@ interface FrontInterface
     public function fnTemplateCatchError($fnTemplateCatchError = null) : ?callable;
 
 
-    /**
-     * @param FrontAssetResolverLocalInterface|false|null $assetLocalResolver
-     */
-    public function assetResolverLocalSet($assetLocalResolver = null) : ?FrontAssetResolverLocalInterface;
+    public function assetResolverLocalSet(?FrontAssetResolverLocalInterface $assetLocalResolver = null) : FrontAssetResolverLocalInterface;
 
-    /**
-     * @param FrontAssetResolverRemoteInterface|false|null $assetRemoteResolver
-     */
-    public function assetResolverRemoteSet($assetRemoteResolver = null) : ?FrontAssetResolverRemoteInterface;
+    public function assetResolverRemoteSet(?FrontAssetResolverRemoteInterface $assetRemoteResolver = null) : FrontAssetResolverRemoteInterface;
 
 
     public function make($name, array $data = []) : PlatesTemplateInterface;

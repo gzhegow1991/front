@@ -15,10 +15,7 @@ interface FrontAssetManagerInterface
     public function initialize(FrontInterface $front) : void;
 
 
-    /**
-     * @param FrontAssetResolverLocalInterface|false|null $resolverLocal
-     */
-    public function resolverLocalSet($resolverLocal) : ?FrontAssetResolverLocalInterface;
+    public function resolverLocalSet(?FrontAssetResolverLocalInterface $resolverLocal) : FrontAssetResolverLocalInterface;
 
     /**
      * @return array{
@@ -33,10 +30,7 @@ interface FrontAssetManagerInterface
     public function resolveLocal(string $input, Template $template) : array;
 
 
-    /**
-     * @param FrontAssetResolverRemoteInterface|false|null $resolverRemote
-     */
-    public function resolverRemoteSet($resolverRemote) : ?FrontAssetResolverRemoteInterface;
+    public function resolverRemoteSet(?FrontAssetResolverRemoteInterface $resolverRemote) : FrontAssetResolverRemoteInterface;
 
     /**
      * @return array{

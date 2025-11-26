@@ -15,9 +15,7 @@ use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface;
 use Gzhegow\Front\Core\TemplateResolver\FrontDefaultTemplateResolver;
 use Gzhegow\Front\Core\TemplateResolver\FrontTemplateResolverInterface;
 use Gzhegow\Front\Package\League\Plates\EngineInterface as PlatesEngineInterface;
-use Gzhegow\Front\Core\AssetManager\ResolverLocal\FrontDefaultAssetResolverLocal;
 use Gzhegow\Front\Core\AssetManager\ResolverLocal\FrontAssetResolverLocalInterface;
-use Gzhegow\Front\Core\AssetManager\ResolverRemote\FrontDefaultAssetResolverRemote;
 use Gzhegow\Front\Core\AssetManager\ResolverRemote\FrontAssetResolverRemoteInterface;
 use Gzhegow\Front\Package\League\Plates\Template\TemplateInterface as PlatesTemplateInterface;
 use Gzhegow\Front\Package\League\Plates\Template\ResolveTemplatePath\TemplateResolverResolveTemplatePath;
@@ -74,8 +72,6 @@ class FrontFacade implements FrontInterface
     )
     {
         $templateResolver = $templateResolver ?? new FrontDefaultTemplateResolver();
-        $assetLocalResolver = $assetLocalResolver ?? new FrontDefaultAssetResolverLocal();
-        $assetRemoteResolver = $assetRemoteResolver ?? new FrontDefaultAssetResolverRemote();
 
         $this->factory = $factory;
 
@@ -115,11 +111,18 @@ class FrontFacade implements FrontInterface
         $this->initialize();
 
         $this->templateResolverSet($templateResolver);
-        $this->assetResolverLocalSet($assetLocalResolver);
-        $this->assetResolverRemoteSet($assetRemoteResolver);
+
+        if ( null !== $assetLocalResolver ) {
+            $this->assetResolverLocalSet($assetLocalResolver);
+        }
+
+        if ( null !== $assetRemoteResolver ) {
+            $this->assetResolverRemoteSet($assetRemoteResolver);
+        }
 
         $folderRoot = Folder::fromArray([
             'alias'       => Front::ROOT_FOLDER_ALIAS,
+            //
             'directory'   => $this->config->directory,
             'public_path' => $this->config->publicPath,
         ])->orThrow();
@@ -154,14 +157,14 @@ class FrontFacade implements FrontInterface
     }
 
 
-    public function directoryGet() : string
-    {
-        return $this->store->directory;
-    }
-
     public function fileExtensionGet() : string
     {
         return $this->store->fileExtension;
+    }
+
+    public function directoryGet() : string
+    {
+        return $this->store->directory;
     }
 
     public function publicPathGet() : ?string
@@ -171,37 +174,26 @@ class FrontFacade implements FrontInterface
 
 
     /**
-     * @return Folder[]
+     * @return array<string, Folder>
      */
     public function folders() : array
     {
         return $this->store->folders;
     }
 
-    public function folderGet(int $id) : Folder
-    {
-        if ( ! isset($this->store->folders[$id]) ) {
-            throw new RuntimeException(
-                [ 'The `id` is missing: ' . $id, $id ]
-            );
-        }
-
-        return $this->store->folders[$id];
-    }
-
-    public function folderByAliasGet(string $alias) : Folder
+    public function folderGet(string $alias) : Folder
     {
         $theType = Lib::type();
 
         $aliasString = $theType->string_not_empty($alias)->orThrow();
 
-        if ( ! isset($this->store->foldersByAlias[$aliasString]) ) {
+        if ( ! isset($this->store->folders[$aliasString]) ) {
             throw new RuntimeException(
                 [ 'The `alias` is missing: ' . $alias, $alias ]
             );
         }
 
-        $folder = $this->store->foldersByAlias[$aliasString];
+        $folder = $this->store->folders[$aliasString];
 
         return $folder;
     }
@@ -225,79 +217,72 @@ class FrontFacade implements FrontInterface
 
     /**
      * @param Folder|array $folder
+     *
+     * @return static
      */
-    public function folderAdd($folder) : int
+    public function folderAdd($folder)
     {
         $folderObject = Folder::from($folder)->orThrow();
 
         $folderRealpath = $folderObject->getDirectory();
         $folderAlias = $folderObject->getAlias();
 
-        $i = array_key_last($this->store->folders);
-        $i++;
+        if ( isset($this->store->folders[$folderAlias]) ) {
+            throw new RuntimeException([ 'The `folderAlias` is already exists: ' . $folderAlias ]);
+        }
 
-        $this->store->folders[$i] = $folderObject;
-        $this->store->foldersByAlias[$folderAlias] = $folderObject;
+        $this->store->folders[$folderAlias] = $folderObject;
         $this->store->foldersByDirectory[$folderRealpath] = $folderObject;
 
-        $this->engine->addFolder($folderAlias, $folderRealpath, $fallback = false);
+        $this->engine->addFolder($folderAlias, $folderRealpath, false);
 
-        return $i;
+        return $this;
     }
 
 
     /**
-     * @return Remote[]
+     * @return array<string, Remote>
      */
     public function remotes() : array
     {
         return $this->store->remotes;
     }
 
-    public function remoteGet(int $id) : Remote
-    {
-        if ( ! isset($this->store->remotes[$id]) ) {
-            throw new RuntimeException(
-                [ 'The `id` is missing: ' . $id, $id ]
-            );
-        }
-
-        return $this->store->remotes[$id];
-    }
-
-    public function remoteByAliasGet(string $alias) : Remote
+    public function remoteGet(string $alias) : Remote
     {
         $theType = Lib::type();
 
         $aliasString = $theType->string_not_empty($alias)->orThrow();
 
-        if ( ! isset($this->store->remotesByAlias[$aliasString]) ) {
+        if ( ! isset($this->store->remotes[$aliasString]) ) {
             throw new RuntimeException(
                 [ 'The `alias` is missing: ' . $alias, $alias ]
             );
         }
 
-        $remote = $this->store->remotesByAlias[$aliasString];
+        $remote = $this->store->remotes[$aliasString];
 
         return $remote;
     }
 
     /**
      * @param Remote|array $remote
+     *
+     * @return static
      */
-    public function remoteAdd($remote) : int
+    public function remoteAdd($remote)
     {
         $remoteObject = Remote::from($remote)->orThrow();
 
         $remoteAlias = $remoteObject->getAlias();
 
-        $i = array_key_last($this->store->remotes);
-        $i++;
+        if ( isset($this->store->remotes[$remoteAlias]) ) {
+            throw new RuntimeException([ 'The `remoteAlias` is already exists: ' . $remoteAlias ]);
+        }
 
-        $this->store->remotes[$i] = $remoteObject;
-        $this->store->remotesByAlias[$remoteAlias] = $remoteObject;
+        $this->store->remotes[$remoteAlias] = $remoteObject;
 
-        return $i;
+        return $this;
     }
 
 
@@ -442,18 +427,12 @@ class FrontFacade implements FrontInterface
     }
 
 
-    /**
-     * @param FrontAssetResolverLocalInterface|false|null $assetLocalResolver
-     */
-    public function assetResolverLocalSet($assetLocalResolver = null) : ?FrontAssetResolverLocalInterface
+    public function assetResolverLocalSet(?FrontAssetResolverLocalInterface $assetLocalResolver = null) : FrontAssetResolverLocalInterface
     {
         return $this->assetManager->resolverLocalSet($assetLocalResolver);
     }
 
-    /**
-     * @param FrontAssetResolverRemoteInterface|false|null $assetRemoteResolver
-     */
-    public function assetResolverRemoteSet($assetRemoteResolver = null) : ?FrontAssetResolverRemoteInterface
+    public function assetResolverRemoteSet(?FrontAssetResolverRemoteInterface $assetRemoteResolver = null) : FrontAssetResolverRemoteInterface
     {
         return $this->assetManager->resolverRemoteSet($assetRemoteResolver);
     }

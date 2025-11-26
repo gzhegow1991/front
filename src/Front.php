@@ -29,14 +29,15 @@ class Front
     }
 
 
-    public static function directoryGet() : string
-    {
-        return static::$facade->directoryGet();
-    }
-
     public static function fileExtensionGet() : string
     {
         return static::$facade->fileExtensionGet();
+    }
+
+
+    public static function directoryGet() : string
+    {
+        return static::$facade->directoryGet();
     }
 
     public static function publicPathGet() : ?string
@@ -45,19 +46,17 @@ class Front
     }
 
 
+    /**
+     * @return array<string, Folder>
+     */
     public static function folders() : array
     {
         return static::$facade->folders();
     }
 
-    public static function folderGet(int $id) : Folder
+    public static function folderGet(string $alias) : Folder
     {
-        return static::$facade->folderGet($id);
-    }
-
-    public static function folderByAliasGet(string $alias) : Folder
-    {
-        return static::$facade->folderByAliasGet($alias);
+        return static::$facade->folderGet($alias);
     }
 
     public static function folderByDirectoryGet(string $directory) : Folder
@@ -65,28 +64,36 @@ class Front
         return static::$facade->folderByDirectoryGet($directory);
     }
 
-    public static function folderAdd($folder) : int
+    /**
+     * @param Folder|array $folder
+     *
+     * @return FrontInterface
+     */
+    public static function folderAdd($folder)
     {
         return static::$facade->folderAdd($folder);
     }
 
 
+    /**
+     * @return array<string, Remote>
+     */
     public static function remotes() : array
     {
         return static::$facade->remotes();
     }
 
-    public static function remoteGet(int $id) : Remote
+    public static function remoteGet(string $alias) : Remote
     {
-        return static::$facade->remoteGet($id);
+        return static::$facade->remoteGet($alias);
     }
 
-    public static function remoteByAliasGet(string $alias) : Remote
-    {
-        return static::$facade->remoteByAliasGet($alias);
-    }
-
-    public static function remoteAdd($remote) : int
+    /**
+     * @param Remote|array $remote
+     *
+     * @return FrontInterface
+     */
+    public static function remoteAdd($remote)
     {
         return static::$facade->remoteAdd($remote);
     }

@@ -12,8 +12,9 @@ use Gzhegow\Front\Exception\LogicException;
 /**
  * @property bool                               $isDebug
  *
- * @property string                             $directory
  * @property string                             $fileExtension
+ *
+ * @property string                             $directory
  * @property string|null                        $publicPath
  *
  * @property Folder[]                           $folders
@@ -40,6 +41,7 @@ class FrontConfig extends AbstractConfig
      * @var string
      */
     protected $fileExtension;
+
     /**
      * @var string
      */
@@ -117,7 +119,7 @@ class FrontConfig extends AbstractConfig
     {
         $theType = Lib::type();
 
-        $this->isDebug = (bool) $this->isDebug;
+        $this->isDebug = ! ! $this->isDebug;
 
         $this->fileExtension = $theType->string($this->fileExtension)->orThrow();
 
@@ -127,12 +129,20 @@ class FrontConfig extends AbstractConfig
             $this->publicPath = $theType->path($this->publicPath)->orThrow();
         }
 
-        foreach ( $this->folders as $i => $folder ) {
-            $this->folders[$i] = Folder::from($folder)->orThrow();
+        foreach ( $this->folders as $folder ) {
+            $folderObject = Folder::from($folder)->orThrow();
+
+            $folderAlias = $folderObject->getAlias();
+
+            $this->folders[$folderAlias] = $folderObject;
         }
 
-        foreach ( $this->remotes as $i => $remote ) {
-            $this->remotes[$i] = Remote::from($remote)->orThrow();
+        foreach ( $this->remotes as $remote ) {
+            $remoteObject = Remote::from($remote)->orThrow();
+
+            $remoteAlias = $remoteObject->getAlias();
+
+            $this->remotes[$remoteAlias] = $remoteObject;
         }
 
         if ( null !== $this->templateLangCurrent ) {
@@ -149,7 +159,7 @@ class FrontConfig extends AbstractConfig
 
                 $theType->string_not_empty($extFrom)->orThrow();
 
-                foreach ( $extToArray as $extTo => $bool ) {
+                foreach ( array_keys($extToArray) as $extTo ) {
                     $theType->string_not_empty($extTo)->orThrow();
 
                     $this->assetExtensionsMap[$extFrom][$extTo] = true;

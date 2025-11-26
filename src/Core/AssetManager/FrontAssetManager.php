@@ -7,8 +7,11 @@ use Gzhegow\Front\FrontInterface;
 use Gzhegow\Front\Core\Struct\Folder;
 use Gzhegow\Front\Core\Struct\Remote;
 use Gzhegow\Front\Core\Store\FrontStore;
+use Gzhegow\Front\Exception\RuntimeException;
 use Gzhegow\Front\Package\League\Plates\Template\Template;
+use Gzhegow\Front\Core\AssetManager\ResolverLocal\FrontDefaultAssetResolverLocal;
 use Gzhegow\Front\Core\AssetManager\ResolverLocal\FrontAssetResolverLocalInterface;
+use Gzhegow\Front\Core\AssetManager\ResolverRemote\FrontDefaultAssetResolverRemote;
 use Gzhegow\Front\Core\AssetManager\ResolverRemote\FrontAssetResolverRemoteInterface;
 
 
@@ -38,27 +41,28 @@ class FrontAssetManager implements FrontAssetManagerInterface
     protected $cacheMemoryRemote = [];
 
 
+    public function __construct()
+    {
+        $this->localResolver = new FrontDefaultAssetResolverLocal();
+        $this->remoteResolver = new FrontDefaultAssetResolverRemote();
+    }
+
     public function initialize(FrontInterface $front) : void
     {
         $this->frontStore = $front->getStore();
+
+        $this->localResolver->setStore($this->frontStore);
+        $this->remoteResolver->setStore($this->frontStore);
     }
 
 
-    /**
-     * @param FrontAssetResolverLocalInterface|false|null $resolverLocal
-     */
-    public function resolverLocalSet($resolverLocal) : ?FrontAssetResolverLocalInterface
+    public function resolverLocalSet(?FrontAssetResolverLocalInterface $resolverLocal) : FrontAssetResolverLocalInterface
     {
+        $resolverLocal = $resolverLocal ?? new FrontDefaultAssetResolverLocal();
+
         $last = $this->localResolver;
 
-        if ( null !== $resolverLocal ) {
-            if ( false === $resolverLocal ) {
-                $resolverLocal = null;
-
-            } else {
-                $resolverLocal->setStore($this->frontStore);
-            }
-        }
+        $resolverLocal->setStore($this->frontStore);
 
         $this->localResolver = $resolverLocal;
 
@@ -82,23 +86,17 @@ class FrontAssetManager implements FrontAssetManagerInterface
         $cacheKey = "{$templatePath}\0{$input}";
 
         if ( ! isset($this->cacheMemoryLocal[$cacheKey]) ) {
-            if ( null !== $this->localResolver ) {
-                $resolved = $this->localResolver->resolve($input, $template);
+            $resolved = $this->localResolver->resolve($input, $template);
 
-            } else {
-                $resolved = [
-                    'input'    => $input,
-                    'folder'   => null,
-                    'realpath' => null,
-                    'src'      => $input,
-                ];
+            if ( null === $resolved['realpath'] ) {
+                throw new RuntimeException(
+                    [ 'Asset not found: ' . $input, $resolved ]
+                );
             }
 
             $srcVersion = null;
             if ( true === $this->frontStore->assetLocalVersion ) {
-                $srcVersion = (null !== $resolved['realpath'])
-                    ? filemtime($resolved['realpath'])
-                    : null;
+                $srcVersion = filemtime($resolved['realpath']);
 
             } else {
                 $theType = Lib::type();
@@ -126,21 +124,13 @@ class FrontAssetManager implements FrontAssetManagerInterface
     }
 
 
-    /**
-     * @param FrontAssetResolverRemoteInterface|false|null $resolverRemote
-     */
-    public function resolverRemoteSet($resolverRemote) : ?FrontAssetResolverRemoteInterface
+    public function resolverRemoteSet(?FrontAssetResolverRemoteInterface $resolverRemote) : FrontAssetResolverRemoteInterface
     {
+        $resolverRemote = $resolverRemote ?? new FrontDefaultAssetResolverRemote();
+
         $last = $this->remoteResolver;
 
-        if ( null !== $resolverRemote ) {
-            if ( false === $resolverRemote ) {
-                $resolverRemote = null;
-
-            } else {
-                $resolverRemote->setStore($this->frontStore);
-            }
-        }
+        $resolverRemote->setStore($this->frontStore);
 
         $this->remoteResolver = $resolverRemote;
 
@@ -161,16 +151,7 @@ class FrontAssetManager implements FrontAssetManagerInterface
         if ( ! isset($this->cacheMemoryRemote[$input]) ) {
             $theType = Lib::type();
 
-            if ( null !== $this->remoteResolver ) {
-                $resolved = $this->remoteResolver->resolve($input, $template);
-
-            } else {
-                $resolved = [
-                    'input'  => $input,
-                    'remote' => null,
-                    'src'    => $input,
-                ];
-            }
+            $resolved = $this->remoteResolver->resolve($input, $template);
 
             $srcVersion = null;
             if ( $theType->string_not_empty($this->frontStore->assetRemoteVersion)->isOk([ &$string ]) ) {

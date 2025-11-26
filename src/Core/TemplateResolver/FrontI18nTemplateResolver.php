@@ -22,9 +22,9 @@ class FrontI18nTemplateResolver extends AbstractFrontTemplateResolver
 
         $piTemplatePathAbsoluteMain = $theFs->pathinfo($templatePathAbsoluteMain);
 
-        $dirname = $piTemplatePathAbsoluteMain[ 'dirname' ];
+        $dirname = $piTemplatePathAbsoluteMain['dirname'];
 
-        $basename = $piTemplatePathAbsoluteMain[ 'basename' ];
+        $basename = $piTemplatePathAbsoluteMain['basename'];
         $basename = $theStr->rcrop($basename, '.' . $fileExtension, false);
         $basename .= '.' . $fileExtension;
 
@@ -32,38 +32,38 @@ class FrontI18nTemplateResolver extends AbstractFrontTemplateResolver
 
         $pathes = [];
 
-        $hasLangCurrent = false;
-        $hasLangDefault = false;
-        if (false
-            || ($hasLangCurrent = (null !== $this->frontStore->templateLangCurrent))
-            || ($hasLangDefault = (null !== $this->frontStore->templateLangDefault))
+        $hasLangCurrent = (null !== $this->frontStore->templateLangCurrent);
+        $hasLangDefault = (null !== $this->frontStore->templateLangDefault);
+        if ( false
+            || $hasLangCurrent
+            || $hasLangDefault
         ) {
-            if ($hasLangCurrent) {
+            if ( $hasLangCurrent ) {
                 $langCurrent = $this->frontStore->templateLangCurrent;
 
                 $absolutePathNew = $theFs->path_join([ $dirname, $langCurrent, $basename ]);
                 $relativePathNew = $theFs->path_relative($absolutePathNew, $folderPathAbsolute);
 
-                $pathes[ $absolutePathNew ] = $relativePathNew;
+                $pathes[$absolutePathNew] = $relativePathNew;
             }
 
-            if ($hasLangDefault) {
+            if ( $hasLangDefault ) {
                 $langDefault = $this->frontStore->templateLangDefault;
 
                 $absolutePathNew = $theFs->path_join([ $dirname, $langDefault, $basename ]);
                 $relativePathNew = $theFs->path_relative($absolutePathNew, $folderPathAbsolute);
 
-                $pathes[ $absolutePathNew ] = $relativePathNew;
+                $pathes[$absolutePathNew] = $relativePathNew;
             }
         }
 
         $absolutePathNew = $templatePathAbsoluteMain;
         $relativePathNew = $theFs->path_relative($absolutePathNew, $folderPathAbsolute);
 
-        $pathes[ $absolutePathNew ] = $relativePathNew;
+        $pathes[$absolutePathNew] = $relativePathNew;
 
         while ( null !== ($path = key($pathes)) ) {
-            if (is_file($path)) {
+            if ( is_file($path) ) {
                 return $path;
             }
 
