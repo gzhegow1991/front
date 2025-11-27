@@ -129,20 +129,16 @@ class FrontConfig extends AbstractConfig
             $this->publicPath = $theType->path($this->publicPath)->orThrow();
         }
 
-        foreach ( $this->folders as $folder ) {
+        foreach ( $this->folders as $i => $folder ) {
             $folderObject = Folder::from($folder)->orThrow();
 
-            $folderAlias = $folderObject->getAlias();
-
-            $this->folders[$folderAlias] = $folderObject;
+            $this->folders[ $i ] = $folderObject;
         }
 
-        foreach ( $this->remotes as $remote ) {
+        foreach ( $this->remotes as $i => $remote ) {
             $remoteObject = Remote::from($remote)->orThrow();
 
-            $remoteAlias = $remoteObject->getAlias();
-
-            $this->remotes[$remoteAlias] = $remoteObject;
+            $this->remotes[ $i ] = $remoteObject;
         }
 
         if ( null !== $this->templateLangCurrent ) {
