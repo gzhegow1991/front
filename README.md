@@ -18,12 +18,11 @@ php test.php
 <?php
 
 // > настраиваем PHP
-\Gzhegow\Lib\Lib::entrypoint()
-    ->useAllRecommended($lock = false)
+($ent = \Gzhegow\Lib\Lib::entrypoint())
+    ->setAllRecommended()
+    ->setOpt($ent::OPT_CUSTOM_DIR_ROOT, __DIR__ . '/..')
     //
-    ->setDirRoot(__DIR__ . '/..')
-    //
-    ->useAll($lock = true)
+    ->useAll()
 ;
 
 
