@@ -1,46 +1,46 @@
 {
-    "name": "gzhegow/front",
-    "type": "library",
-    "license": "MIT",
+  "name": "gzhegow/front",
+  "type": "library",
+  "license": "MIT",
 
-    "authors": [
-        {
-            "name": "gzhegow",
-            "email": "6562680@gmail.com"
-        }
-    ],
+  "authors": [
+      {
+          "name": "gzhegow",
+          "email": "6562680@gmail.com"
+      }
+  ],
 
-    "minimum-stability": "dev",
-    "prefer-stable": true,
+  "minimum-stability": "dev",
+  "prefer-stable": true,
 
-    "autoload": {
-        "psr-4": {
-            "Gzhegow\\Front\\": "src/"
-        },
-        "exclude-from-classmap": [
-            "tests/"
-        ]
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Gzhegow\\Front\\Tests\\": "tests/src/"
-        }
-    },
+  "autoload": {
+      "psr-4": {
+          "Gzhegow\\Front\\": "src/"
+      },
+      "exclude-from-classmap": [
+          "tests/"
+      ]
+  },
+  "autoload-dev": {
+      "psr-4": {
+          "Gzhegow\\Front\\Tests\\": "tests/src/"
+      }
+  },
 
-    "require": {
-        "php": "^7.3|^8.0",
+  "require": {
+      "php": "^7.3|^8.0",
 
-        "gzhegow/league-plates-84": "~3.6.0",
-        "gzhegow/lib": "~1.0.0"
-    },
+      "gzhegow/league-plates-84": "~3.6.0",
+      "gzhegow/lib": "~1.0.0"
+  },
 
-    "config": {
-        "optimize-autoloader": true,
+  "config": {
+      "optimize-autoloader": true,
 
-        "sort-packages": false
-    },
+      "sort-packages": false
+  },
 
-    "extra": {
-        "version": "1.0.0"
-    }
+  "extra": {
+    "version": "v1.0.0"
+  }
 }
