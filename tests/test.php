@@ -200,13 +200,18 @@ $front->fnTemplateGetItem(
 // > можно установить собственные обработчики CATCH_ERROR (например, не бросать исключения, а заменять в строке шаблона ошибку на строку и просто логировать)
 $front->fnTemplateCatchError(
     static function (
-        \Throwable $e, string $content,
+        \Throwable $e,
         \Gzhegow\Front\Package\League\Plates\Template\TemplateInterface $template
     ) {
-        $eMessage = $e->getMessage();
-        $templateName = $template->name();
-
-        return $content . " [ ERROR : {$templateName} : {$eMessage} ]";
+        return ''
+            . '[ '
+            . implode(' # ', [
+                '> @ EXCEPTION @ <',
+                //
+                $template->name(),
+                $e->getMessage(),
+            ])
+            . ' ]';
     }
 );
 
