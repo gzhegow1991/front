@@ -109,15 +109,10 @@ class Template extends LeagueTemplate implements TemplateInterface
 
         $resolveTemplatePathInvokableObject = $this->engine->getResolveTemplatePath();
 
-        try {
-            $pathResolved = call_user_func_array(
-                $resolveTemplatePathInvokableObject,
-                [ $this->name ]
-            );
-        }
-        catch ( \Throwable $e ) {
-            throw new RuntimeException($e);
-        }
+        $pathResolved = call_user_func_array(
+            $resolveTemplatePathInvokableObject,
+            [ $this->name ]
+        );
 
         $fileRealpath = realpath($pathResolved);
 
@@ -223,6 +218,7 @@ class Template extends LeagueTemplate implements TemplateInterface
 
         ob_start();
 
+        $e = null;
         try {
             /**
              * @noinspection PhpMethodParametersCountMismatchInspection
@@ -234,29 +230,35 @@ class Template extends LeagueTemplate implements TemplateInterface
             })(
                 $this->path()
             );
-
-            $content = ob_get_clean();
         }
         catch ( \Throwable $e ) {
-            $content = ob_get_clean();
+        }
 
+        $content = ob_get_clean();
+        $content = $content ?: '';
+
+        if ( $e ) {
             $fnCatchError = $this->engine->fnTemplateCatchError();
 
-            if ( null !== $fnCatchError ) {
+            if ( $fnCatchError ) {
 
                 try {
-                    $content = call_user_func_array(
+                    $contentCatch = call_user_func_array(
                         $fnCatchError,
-                        [ $e, $content, $this ]
+                        [ $e, $this ]
                     );
+
+                    $e = null;
+                    $content = "\n\n" . $contentCatch . "\n\n";
                 }
                 catch ( \Throwable $e ) {
-                    throw new RuntimeException($e);
                 }
 
-            } else {
-                throw new RuntimeException($e);
             }
+        }
+
+        if ( $e ) {
+            throw $e;
         }
 
         if ( [] !== $this->sections ) {
@@ -281,6 +283,7 @@ class Template extends LeagueTemplate implements TemplateInterface
                 unset($lines[$i]);
             }
         }
+        $lines = array_values($lines);
 
         if ( $this->frontStore->isDebug ) {
             $relpath = $this->relpath();
@@ -330,12 +333,7 @@ class Template extends LeagueTemplate implements TemplateInterface
         $template->css =& $this->css;
         $template->js =& $this->js;
 
-        try {
-            $html = $template->render();
-        }
-        catch ( \Throwable $e ) {
-            throw new RuntimeException($e);
-        }
+        $html = $template->render();
 
         return $html;
     }
