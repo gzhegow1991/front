@@ -196,7 +196,7 @@ class Template extends LeagueTemplate implements TemplateInterface
         if ( null === $fnGetItem ) {
             $theType = Lib::type();
 
-            $item = $theType->key_exists($name, $this->data)->orThrow();
+            $item = $theType->array_key_exists($this->data, $name)->orThrow();
 
         } else {
             $item = call_user_func_array(
@@ -210,7 +210,9 @@ class Template extends LeagueTemplate implements TemplateInterface
 
 
     /**
-     * @see parent::render()
+     * @see          parent::render()
+     *
+     * @noinspection PhpUnhandledExceptionInspection
      */
     public function render(?array $data = null) : string
     {

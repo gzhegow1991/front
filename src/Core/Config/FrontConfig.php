@@ -132,13 +132,13 @@ class FrontConfig extends AbstractConfig
         foreach ( $this->folders as $i => $folder ) {
             $folderObject = Folder::from($folder)->orThrow();
 
-            $this->folders[ $i ] = $folderObject;
+            $this->folders[$i] = $folderObject;
         }
 
         foreach ( $this->remotes as $i => $remote ) {
             $remoteObject = Remote::from($remote)->orThrow();
 
-            $this->remotes[ $i ] = $remoteObject;
+            $this->remotes[$i] = $remoteObject;
         }
 
         if ( null !== $this->templateLangCurrent ) {
@@ -151,7 +151,7 @@ class FrontConfig extends AbstractConfig
 
         if ( null !== $this->assetExtensionsMap ) {
             foreach ( $this->assetExtensionsMap as $extFrom => $extToArray ) {
-                $theType->array_not_empty($extToArray)->orThrow();
+                $theType->php_array_not_empty($extToArray)->orThrow();
 
                 $theType->string_not_empty($extFrom)->orThrow();
 

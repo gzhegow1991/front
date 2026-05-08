@@ -51,6 +51,9 @@ class FrontDefaultAssetResolverLocal extends AbstractFrontAssetResolverLocal
                     );
                 }
 
+                /**
+                 * @var Folder $folder
+                 */
                 $folder = $this->frontStore->folders[$folderAlias];
 
                 if ( ! $folder->hasPublicPath($folderPublicPath) ) {
