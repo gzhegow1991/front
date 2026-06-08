@@ -18,6 +18,8 @@ use Gzhegow\Front\Package\League\Plates\EngineInterface as PlatesEngineInterface
 
 class Template extends LeagueTemplate implements TemplateInterface
 {
+    const PLACEHOLDER_STRIP = '<!-- {{ STRIP }} -->';
+
     const SECTION_BRACES = [ '<!-- {{ __', '__ }} -->' ];
 
     const SECTION_CONTENT = 'content';
@@ -264,19 +266,26 @@ class Template extends LeagueTemplate implements TemplateInterface
         }
 
         if ( [] !== $this->sections ) {
-            foreach ( array_keys($this->sections) as $name ) {
-                $sectionPlaceholder = static::SECTION_BRACES[0] . $name . static::SECTION_BRACES[1];
-                $sectionContent = $this->sections[$name] ?? '';
+            foreach ( $this->sections as $name => $devnull ) {
+                $sectionSearch = static::SECTION_BRACES[0] . $name . static::SECTION_BRACES[1];
+                $sectionReplace = $this->sections[$name] ?? '';
 
-                $content = str_replace(
-                    $sectionPlaceholder,
-                    $sectionContent,
-                    $content
+                $content = strtr(
+                    $content,
+                    [ $sectionSearch => $sectionReplace ]
                 );
             }
         }
 
         $content = trim($content);
+
+        $placeholderStrip = static::PLACEHOLDER_STRIP;
+        if ( false !== strpos($content, $placeholderStrip) ) {
+            $placeholderStripRegex = preg_quote($placeholderStrip, '/');
+            $placeholderStripRegex = '\s*' . $placeholderStripRegex . '\s*';
+
+            $content = preg_replace('/' . $placeholderStripRegex . '/', '', $content);
+        }
 
         $lines = explode("\n", $content);
         $lines = array_map('rtrim', $lines);
