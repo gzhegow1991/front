@@ -31,6 +31,7 @@
         "php": "^7.3|^8.0",
 
         "gzhegow/league-plates-84": "~3.6.0",
+
         "gzhegow/lib": "^1.0"
     },
 
@@ -38,9 +39,5 @@
         "optimize-autoloader": true,
 
         "sort-packages": false
-    },
-
-    "extra": {
-        "version": "v1.2.0"
     }
 }

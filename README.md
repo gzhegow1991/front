@@ -17,11 +17,12 @@ php test.php
 ```php
 <?php
 
-// > настраиваем PHP
+define('__DIR_ROOT__', __DIR__ . '/..');
+
 \Gzhegow\Lib\Lib::entrypoint()
     ->setAllRecommended()
     //
-    ->setCustomDirRoot(__DIR__ . '/..')
+    ->setCustomDirRoot(__DIR_ROOT__)
     //
     ->useAll()
     //
@@ -29,38 +30,8 @@ php test.php
 ;
 
 
-
-// > добавляем несколько функций для тестирования
-$ffn = new class {
-    function root() : string
-    {
-        return realpath(__DIR__ . '/..');
-    }
-
-
-    function values($separator = null, ...$values) : string
-    {
-        return \Gzhegow\Lib\Lib::debug()->dump_values([], $separator, ...$values);
-    }
-
-
-    function print(...$values) : void
-    {
-        echo $this->values(' | ', ...$values) . PHP_EOL;
-    }
-
-
-    function test(\Closure $fn, array $args = []) : \Gzhegow\Lib\Modules\Test\TestCase
-    {
-        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
-
-        return \Gzhegow\Lib\Lib::test()->newTestCase()
-            ->fn($fn, $args)
-            ->trace($trace)
-        ;
-    }
-};
-
+$theDebug = \Gzhegow\Lib\Lib::debug();
+$theTest = \Gzhegow\Lib\Lib::test();
 
 
 // > сначала всегда фабрика
@@ -69,7 +40,7 @@ $factory = new \Gzhegow\Front\FrontFactory();
 // > создаем конфигурацию
 $config = new \Gzhegow\Front\Core\Config\FrontConfig();
 $config->configure(
-    static function (\Gzhegow\Front\Core\Config\FrontConfig $config) use ($ffn) {
+    static function (\Gzhegow\Front\Core\Config\FrontConfig $config) {
         // >>> шаблонизатор
         // > устанавливаем режим DEBUG, чтобы в HTML выводились пути к шаблонам
         $config->isDebug = true;
@@ -250,19 +221,21 @@ $front->assetResolverRemoteSet(new \Gzhegow\Front\Core\AssetManager\ResolverRemo
 
 // > TEST
 // > так можно отрисовать шаблон с его содержимым
-$fn = function () use ($ffn, $front) {
-    $ffn->print('TEST 1');
+$fn = function () use ($front, $theDebug) {
+    $theDebug->dump_value('TEST 1');
     echo "\n";
 
     $beforeLangDefault = $front->templateLangDefaultSet(false);
     $beforeLangCurrent = $front->templateLangCurrentSet(false);
 
-    $ffn->print($front->render('@html::pages/demo/page.demo.phtml'));
+    $theDebug->dump_value(
+        $front->render('@html::pages/demo/page.demo.phtml')
+    );
 
     $front->templateLangCurrentSet($beforeLangCurrent);
     $front->templateLangDefaultSet($beforeLangDefault);
 };
-$test = $ffn->test($fn);
+$test = $theTest->newCase($fn);
 $test->expectStdout('
 "TEST 1"
 
@@ -287,8 +260,8 @@ $test->run();
 
 // > TEST
 // > так можно отрисовать шаблон с его содержимым
-$fn = function () use ($ffn, $front) {
-    $ffn->print('TEST 2');
+$fn = function () use ($front, $theDebug) {
+    $theDebug->dump_value('TEST 2');
     echo "\n";
 
     $beforeLangDefault = $front->templateLangDefaultSet(false);
@@ -297,20 +270,26 @@ $fn = function () use ($ffn, $front) {
     $front->templateLangDefaultSet('ru');
 
     $front->templateLangCurrentSet('en'); // > будет использован `en`
-    $ffn->print($front->render('@html::pages/demo/page.demo'));
+    $theDebug->dump_value(
+        $front->render('@html::pages/demo/page.demo')
+    );
     echo "\n";
 
     $front->templateLangCurrentSet('ru'); // > будет использован `ru`, совпадает с `default`
-    $ffn->print($front->render('@html::pages/demo/page.demo'));
+    $theDebug->dump_value(
+        $front->render('@html::pages/demo/page.demo')
+    );
     echo "\n";
 
     $front->templateLangCurrentSet('unknown'); // > будет использован `default`
-    $ffn->print($front->render('@html::pages/demo/page.demo'));
+    $theDebug->dump_value(
+        $front->render('@html::pages/demo/page.demo')
+    );
 
     $front->templateLangCurrentSet($beforeLangCurrent);
     $front->templateLangDefaultSet($beforeLangDefault);
 };
-$test = $ffn->test($fn);
+$test = $theTest->newCase($fn);
 $test->expectStdout('
 "TEST 2"
 
