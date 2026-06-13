@@ -34,6 +34,8 @@ $theDebug = \Gzhegow\Lib\Lib::debug();
 $theTest = \Gzhegow\Lib\Lib::test();
 
 
+// >>> ЗАПУСК
+
 // > сначала всегда фабрика
 $factory = new \Gzhegow\Front\FrontFactory();
 
